@@ -1,3 +1,10 @@
+# SwimmeR 0.3.0
+* added `get_mode` function that returns the most frequently occurring element(s) of a list
+* added `draw_bracket` for creating single elimination brackets e.g. for tournaments and shoot-outs
+* added aliases so `swim_parse` and `read_results` now work for `Swim_Parse` and `Read_Results`
+* updated vignette
+
+
 # SwimmeR 0.2.0
 
 * Added a `NEWS.md` file to track changes to the package.

@@ -1,14 +1,18 @@
 Package: SwimmeR
-Title: Formatting and Conversions for Swimming Times
-Version: 0.2.0
+Title: Data Import, Cleaning, and Conversions for Swimming Results
+Version: 0.3.0
 Authors@R: 
-    person(given = "Greg",
-           family = "Pilgrim",
-           role = c("aut", "cre"),
-           email = "gpilgrim2670@gmail.com")
-Description: There are two goals primary functions 'SwimmeR' as presently constructed.  First, it reads in swimming results from html or pdf sources and returns tidy dataframes.  Second it converts swimming times (performances) between the computationally useful 
-    format of seconds, reported to the 100ths place (eg 95.37) and the conventional reporting format (1:35.37) used in the swimming community.
-    Additionally 'SwimmeR' converts times between the various pool sizes used in competitive swimming, namely 50m length (LCM), 25m length (SCM)
+    c(person(given = "Greg",
+            family = "Pilgrim",
+            role = c("aut", "cre"),
+            email = "gpilgrim2670@gmail.com",
+            comment = c(ORCID = "0000-0001-7831-442X")),
+      person(given = "Caitlin",
+             family = "Baldwin",
+             role = "ctb"))
+Description: There are two goals for 'SwimmeR' as presently constructed.  The first is reading in swimming results from html or pdf sources and returning tidy dataframes.  The second is working with the resulting data.  To this end 'SwimmeR' converts swimming times (performances) between the computationally useful 
+    format of seconds, reported to the 100ths place (eg 95.37), and the conventional reporting format (1:35.37) used in the swimming community, as well as providing tools for assigning team names etc.
+    Additionally 'SwimmeR' has functions for drawing single-elimination brackets and also converts times between the various pool sizes used in competitive swimming, namely 50m length (LCM), 25m length (SCM)
     and 25y length (SCY).
 License: MIT + file LICENSE
 Imports: purrr, dplyr, stringr, tibble, utils, rvest, pdftools,
@@ -19,9 +23,10 @@ RoxygenNote: 7.1.0
 Suggests: testthat (>= 2.1.0), knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2020-04-10 00:57:00 UTC; Greg
-Author: Greg Pilgrim [aut, cre]
+Packaged: 2020-07-10 16:12:39 UTC; gpilgrim
+Author: Greg Pilgrim [aut, cre] (<https://orcid.org/0000-0001-7831-442X>),
+  Caitlin Baldwin [ctb]
 Maintainer: Greg Pilgrim <gpilgrim2670@gmail.com>
 Depends: R (>= 3.5.0)
 Repository: CRAN
-Date/Publication: 2020-04-10 04:40:03 UTC
+Date/Publication: 2020-07-10 17:40:02 UTC

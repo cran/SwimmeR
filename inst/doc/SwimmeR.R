@@ -11,31 +11,31 @@ library(dplyr)
 library(ggplot2)
 library(scales)
 
-## ----Read_Results, message = FALSE--------------------------------------------
+## ----read_results, message = FALSE--------------------------------------------
 file_path <- system.file("extdata", "Texas-Florida-Indiana.pdf", package = "SwimmeR")
 
-file_read <- Read_Results(file = file_path)
+file_read <- read_results(file = file_path)
 
-## ----Read_Results output, message = FALSE-------------------------------------
+## ----read_results output, message = FALSE-------------------------------------
 file_read[294:303]
 
-## ----Swim_Parse, message = FALSE----------------------------------------------
-df <- Swim_Parse(file = file_read, typo = c("\n", "Indiana  University", ", University of"), replacement = c("\n", "Indiana University", ""))
+## ----swim_parse, message = FALSE----------------------------------------------
+df <- swim_parse(file = file_read, typo = c("\n", "Indiana  University", ", University of"), replacement = c("\n", "Indiana University", ""))
 
 ## ----Swim Parse output, message = FALSE---------------------------------------
 df[67:69,]
 
-## ----Read_Results html, message = FALSE---------------------------------------
+## ----read_results html, message = FALSE---------------------------------------
 url <- "http://www.nyhsswim.com/Results/Girls/2003/NYS/Single.htm"
-url_read <- Read_Results(file = url, node = "pre")
+url_read <- read_results(file = url, node = "pre")
 
-## ----Read_Results html output, message = FALSE--------------------------------
+## ----read_results html output, message = FALSE--------------------------------
 url_read[587:598]
 
-## ----Swim_Parse html, message = FALSE-----------------------------------------
-df_1 <- Swim_Parse(file = url_read, avoid = c("NY State Rcd:"))
+## ----swim_parse html, message = FALSE-----------------------------------------
+df_1 <- swim_parse(file = url_read, avoid = c("NY State Rcd:"))
 
-## ----Swim_Parse html output, message = FALSE----------------------------------
+## ----swim_parse html output, message = FALSE----------------------------------
 df_1[313:315,]
 
 ## ----formatting times---------------------------------------------------------
@@ -56,4 +56,38 @@ King200Breast %>%
   theme_classic() +
   labs(y= "Time",
        title = "Lilly King NCAA 200 Breaststroke")
+
+## ----get_mode setup-----------------------------------------------------------
+Name <- c(rep("Lilly King", 5), rep("James Sullivan", 3))
+Team <- c(rep("IU", 2), "Indiana", "IUWSD", "Indiana University", rep("Monsters University", 2), "MU")
+df <- data.frame(Name, Team, stringsAsFactors = FALSE)
+df
+
+## ----get_mode-----------------------------------------------------------------
+df <- df %>% 
+  group_by(Name) %>% 
+  mutate(Team = get_mode(Team))
+df
+
+## ----brackets 1---------------------------------------------------------------
+teams <- c("red", "orange", "yellow", "green", "blue", "indigo", "violet")
+draw_bracket(teams = teams)
+
+## ----brackets 2---------------------------------------------------------------
+round_two <- c("red", "yellow", "blue", "indigo")
+draw_bracket(teams = teams,
+             round_two = round_two)
+
+## ----brackets 3---------------------------------------------------------------
+round_three <- c("red", "blue")
+draw_bracket(teams = teams,
+             round_two = round_two,
+             round_three = round_three)
+
+## ----brackets champion--------------------------------------------------------
+champion <- "red"
+draw_bracket(teams = teams,
+             round_two = round_two,
+             round_three = round_three,
+             champion = champion)
 

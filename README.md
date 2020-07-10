@@ -6,11 +6,21 @@
 [![](http://cranlogs.r-pkg.org/badges/SwimmeR?color=blue)](https://cran.r-project.org/package=SwimmeR)
 [![](http://cranlogs.r-pkg.org/badges/last-week/SwimmeR?color=blue)](https://cran.r-project.org/package=SwimmeR)
 
-'SwimmeR' is intended to assist those working with times from competitive pool swimming races, such as those conducted under the NHFS, NCAA, or FINA.  For more information please see `vignette("SwimmeR")`.
+`SwimmeR` is intended to assist those working with times from competitive pool swimming races, such as those conducted under the NHFS, NCAA, or FINA.  For more information please see `vignette("SwimmeR")`.
+
+### Latest Released Version from CRAN
+`install.packages("SwimmeR")`
+
+`library(SwimmeR)`
+
+### Latest Development Version from Github
+`devtools::install_github("gpilgrim2670/SwimmeR", build_vignettes = TRUE)`
+
+`library(SwimmeR)`
 
 # Usage
 
-Version 0.2.0 of `SwimmeR` has two major uses - importing results and formatting times.
+Version 0.3.0 of `SwimmeR` has two major uses - importing results and formatting times.
 
 ## Importing Results
 
@@ -18,7 +28,7 @@ Version 0.2.0 of `SwimmeR` has two major uses - importing results and formatting
 
 `Read_Result` has two arguments, `file`, which is the file path to read in, and `node`, required only for HTML files, this is a CSS node where the results reside
 
-`Swim_Parse` has four arguements. `file` is the output of `Read_Result` and is required.  `avoid` is a list of strings.  Rows of the read in file containing any of those strings will not be included.  `avoid` is optional.  Incorrectly specifying it may lead to nonsense rows in the final dataframe, but will not cause an error.  `typo` and `replacement` work together to fix typos, by replacing them with replacements.  Strings in `typo` will be replaced by strings in `replacement` in element index order - that is the first element of `typo` will be replaced everywhere it appears by the first element of `replacement`.  Typos can cause lost data and nonsense rows.  See `?Swim_Parse` or the package vignette for more information.
+`Swim_Parse` has four arguments. `file` is the output of `Read_Result` and is required.  `avoid` is a list of strings.  Rows of the read in file containing any of those strings will not be included.  `avoid` is optional.  Incorrectly specifying it may lead to nonsense rows in the final dataframe, but will not cause an error.  `typo` and `replacement` work together to fix typos, by replacing them with replacements.  Strings in `typo` will be replaced by strings in `replacement` in element index order - that is the first element of `typo` will be replaced everywhere it appears by the first element of `replacement`.  Typos can cause lost data and nonsense rows.  See `?Swim_Parse` or the package vignette for more information.
 
 ```r
 Swim_Parse(
@@ -44,7 +54,7 @@ Swim_Parse(
 
 ## Formatting Times
 
-`SwimmeR` also converts times between the conventional swimming format of minutes:seconds.hundredths (1:35.37) and the computationally useful format of seconds, reported to the 100ths place (eg 95.37).  This is accomplished with `sec_format` and `mmss_format`, which are inverses of one another.  Both `sec_format` and `mmss_format` work well with `tidyverse` functions.
+`SwimmeR` also converts times between the conventional swimming format of minutes:seconds.hundredths (1:35.37) and the computationally useful format of seconds, reported to the 100ths place (e.g. 95.37).  This is accomplished with `sec_format` and `mmss_format`, which are inverses of one another.  Both `sec_format` and `mmss_format` work well with `tidyverse` functions.
 
 ```r
 times <- c("1:35.97", "57.34", "16:53.19", NA)
@@ -54,6 +64,35 @@ times_mmss <- mmss_format(times_sec)
 times_mmss
 all.equal(times, times_mmss)
 ```
+
+## Regularizing team names
+
+Team names are often abbreviated.  Rather than specifying every abbreviation `SwimmeR` provides `get_mode` to make the task simpler.
+
+```
+Name <- c(rep("Lilly King", 5), rep("James Sullivan", 3))
+Team <- c(rep("IU", 2), "Indiana", "IUWSD", "Indiana University", rep("Monsters University", 2), "MU")
+df <- data.frame(Name, Team, stringsAsFactors = FALSE)
+df %>% 
+  group_by(Name) %>% 
+  mutate(Team = get_mode(Team))
+```
+
+### Drawing brackets
+
+Brackets for single elimination tournaments can be produced for any number of teams between 5 and 64.  Byes will automatically be included for higher seeds as required.
+
+```r
+teams <- c("red", "orange", "yellow", "green", "blue", "indigo", "violet")
+round_two <- c("red", "yellow", "blue", "indigo")
+round_three <- c("red", "blue")
+champion <- "red"
+draw_bracket(teams = teams,
+            round_two = round_two,
+            round_three = round_three,
+            champion = champion)
+```
+
 ### Course conversions
 
 Additionally 'SwimmeR' also converts between the various pool sizes used in competitive swimming, namely 50m length (LCM), 25m length (SCM) and 25y length (SCY).  This is accomplished with either `convert_courses` or `convert_courses_DF`, both of which have the same basic functionality.  The difference is the `convert_courses_DF` returns a dataframe including the input variables whereas `convet_courses` only returns the converted time(s).  Both functions will take inputs in either seconds or swimming format.
@@ -67,6 +106,7 @@ course_convert_DF(time = Swim$time, course = Swim$course, course_to = Swim$cours
 ```
 
 ## Getting help
+
 For more information please see `vignette("SwimmeR")`.  If you download from github don't forget to set `build_vignettes = TRUE`.
 
 If you find bug, please provide a minimal reproducible example at [github](https://github.com/gpilgrim2670/SwimmeR).
