@@ -7,7 +7,7 @@ test_that("Swim_Parse works", {
     Read_Results(file),
     typo =  c("\n", "Indiana  University", ", University of"),
     replacement = c("\n", "Indiana University", "")
-  )[67, 1],
+  )[100, 1],
   "Lilly King")
 
 })
@@ -20,7 +20,7 @@ test_that("swim_parse works 2", {
     typo =  c("\n", "Indiana  University", ", University of"),
 
     replacement = c("\n", "Indiana University", "")
-  )[188, 6],
+  )[252, 6],
   "2:01.78")
 
 })
@@ -31,9 +31,9 @@ test_that("Swim_Parse works 3", {
       "http://www.nyhsswim.com/Results/Boys/2008/NYS/Single.htm",
       node = "pre"
     ),
-    typo = c("-1NORTH ROCKL"),
-    replacement = c("1-NORTH ROCKL")
-  )[,2]),
+    typo = c("-1NORTH ROCKL", "\\s\\d{1,2}\\s{2,}"),
+    replacement = c("1-NORTH ROCKL", "  ")
+  )[,2], na.rm = TRUE),
   16235)
 
 })
@@ -43,7 +43,7 @@ test_that("Swim_Parse works USMS", {
   file <- system.file("extdata", "11102019roc.pdf", package = "SwimmeR")
   expect_match(Swim_Parse(
     Read_Results(file)
-  )[107, 6],
+  )[109, 6],
   "51.90")
 
 })
@@ -54,11 +54,19 @@ test_that("Swim_Parse works USA", {
   file <- system.file("extdata", "jets08082019_067546.pdf", package = "SwimmeR")
   expect_equivalent(sum(Swim_Parse(
     Read_Results(file)
-  )[1]),
+  )[1], na.rm = TRUE),
   3091)
 })
 
 test_that("Swim_Parse works list", {
+
+  #import standard
+
+  df_standard <- read.csv(system.file("extdata", "df_standard.csv", package = "SwimmeR"), stringsAsFactors = FALSE, colClasses=c("character", "numeric", rep("character", 6), "numeric", "numeric"))
+  df_standard <- df_standard %>%
+    select(-X)
+
+  #import test files
   file_1 <- system.file("extdata", "jets08082019_067546.pdf", package = "SwimmeR")
   file_2 <- system.file("extdata", "11102019roc.pdf", package = "SwimmeR")
   file_3 <- system.file("extdata", "Texas-Florida-Indiana.pdf", package = "SwimmeR")
@@ -68,7 +76,6 @@ test_that("Swim_Parse works list", {
   url94 <- "http://www.section6swim.com/Results/GirlsHS/2012/NFL/Single.htm" # schools as SR
   url97 <- "http://www.section3swim.com/Results/BoysHS/2020/Sec3/BC/Single.htm" # events errors - fixed
   url98 <- "http://www.section5swim.com/Results/BoysHS/2013/HAC/Single.htm"
-  url99 <- "http://www.section1swim.com/Results/BoysHS/2020/Sec1/Single.htm"
   url100 <- "http://www.section9swim.com/Results/GirlsHS/2000/Sec9/Single.htm"
   url101 <- "http://www.section5swim.com/Results/GirlsHS/2000/Sec5/B/Single.htm"
   sources <- c(file_1,
@@ -80,13 +87,8 @@ test_that("Swim_Parse works list", {
                url94,
                url97,
                url98,
-               url99,
                url100,
                url101)
-
-  df_standard <- read.csv(system.file("extdata", "df_test.csv", package = "SwimmeR"), stringsAsFactors = FALSE, colClasses=c("character", "numeric", rep("character", 7)))
-  df_standard <- df_standard %>%
-    select(-column_label)
 
   Read_Map <- function(links) {
 
@@ -109,7 +111,6 @@ test_that("Swim_Parse works list", {
                           "", "", "", "-Psal", "Brian A", "Williamsville East ", "B-AAB", "Section XI", "Mexico",
                           "Nottingham", "Bronxville", "AA", "-CT", "-MA", "1-NORTH ROCKL", "QUEENSBURY", "Indiana University", "", "Neuendorf, Sugrue"))
 
-    # names(scrape_test_all) <- links
     return(all_results)
 
   }
@@ -118,6 +119,8 @@ test_that("Swim_Parse works list", {
   df_test <- Parse_Map(df_test)
   df_test <- dplyr::bind_rows(df_test, .id = "column_label") %>%
     select(-column_label)
+
+  # compare standard to test
   expect_equivalent(df_standard,
                     df_test)
 })

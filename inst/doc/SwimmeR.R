@@ -20,10 +20,15 @@ file_read <- read_results(file = file_path)
 file_read[294:303]
 
 ## ----swim_parse, message = FALSE----------------------------------------------
-df <- swim_parse(file = file_read, typo = c("\n", "Indiana  University", ", University of"), replacement = c("\n", "Indiana University", ""))
+df <-
+  swim_parse(
+    file = file_read,
+    typo = c("Indiana  University", ", University of"),
+    replacement = c("Indiana University", "")
+  )
 
 ## ----Swim Parse output, message = FALSE---------------------------------------
-df[67:69,]
+df[100:102,]
 
 ## ----read_results html, message = FALSE---------------------------------------
 url <- "http://www.nyhsswim.com/Results/Girls/2003/NYS/Single.htm"
@@ -36,7 +41,7 @@ url_read[587:598]
 df_1 <- swim_parse(file = url_read, avoid = c("NY State Rcd:"))
 
 ## ----swim_parse html output, message = FALSE----------------------------------
-df_1[313:315,]
+df_1[358:360,]
 
 ## ----formatting times---------------------------------------------------------
 data(King200Breast)

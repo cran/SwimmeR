@@ -1,6 +1,6 @@
 Package: SwimmeR
 Title: Data Import, Cleaning, and Conversions for Swimming Results
-Version: 0.3.1
+Version: 0.4.1
 Authors@R: 
     c(person(given = "Greg",
             family = "Pilgrim",
@@ -10,23 +10,20 @@ Authors@R:
       person(given = "Caitlin",
              family = "Baldwin",
              role = "ctb"))
-Description: There are two goals for 'SwimmeR' as presently constructed.  The first is reading in swimming results from html or pdf sources and returning tidy dataframes.  The second is working with the resulting data.  To this end 'SwimmeR' converts swimming times (performances) between the computationally useful 
-    format of seconds, reported to the 100ths place (e.g. 95.37), and the conventional reporting format (1:35.37) used in the swimming community, as well as providing tools for assigning team names etc.
-    Additionally 'SwimmeR' has functions for drawing single-elimination brackets and also converts times between the various pool sizes used in competitive swimming, namely 50m length (LCM), 25m length (SCM)
-    and 25y length (SCY).
+Description: The goal for of the 'SwimmeR' package is to provide means of acquiring, and then analyzing, data from swimming (and diving) competitions.  To that end 'SwimmeR' allows results to be read in from .html sources, like 'Hy-Tek' real time results pages, '.pdf' files, and now (on a development basis) '.hy3' files.  Once read in, 'SwimmeR' can convert swimming times (performances) between the computationally useful format of seconds reported to the '100ths' place (e.g. 95.37), and the conventional reporting format (1:35.37) used in the swimming community.  'SwimmeR' can also score meets in a variety of formats with user defined point values, convert times between courses ('LCM', 'SCM', 'SCY') and draw single elimination brackets, as well as providing a suite of tools for working cleaning swimming data.  This is a developmental package, not yet mature.
 License: MIT + file LICENSE
 Imports: purrr, dplyr, stringr, tibble, utils, rvest, pdftools,
-        ggplot2, scales, magrittr, xml2
+        ggplot2, scales, magrittr, xml2, readr
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 Suggests: testthat (>= 2.1.0), knitr, rmarkdown
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2020-07-10 23:04:13 UTC; Greg
+Packaged: 2020-08-28 15:45:42 UTC; gpilgrim
 Author: Greg Pilgrim [aut, cre] (<https://orcid.org/0000-0001-7831-442X>),
   Caitlin Baldwin [ctb]
 Maintainer: Greg Pilgrim <gpilgrim2670@gmail.com>
 Depends: R (>= 3.5.0)
 Repository: CRAN
-Date/Publication: 2020-07-11 07:00:02 UTC
+Date/Publication: 2020-08-28 19:50:08 UTC

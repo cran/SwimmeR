@@ -28,6 +28,7 @@ library(scales)
 
 Importing is performed by `read_results` which takes as an argument a file path as `file` and a `node` (for .html only).
 
+In addition to this vignette I do a lot of demos on how to use `SwimmeR` at my blog [Swimming + Data Science](https://pilgrim.netlify.app/).
 
 # Reading PDF Results
 `SwimmeR` includes Texas-Florida-Indiana.pdf, results from a tri-meet between the three schools.  It can be read in as such:
@@ -52,15 +53,20 @@ The second issue is that `Texas` and `Florida` are styled as `Texas, University 
 
 Both of these issues can be fixed with the `typo` and `replacement` arguments to `swim_parse`.  Elements of `typo` will be replaced by the element of `replacement` with which they share an index, so all instances of the first element of `typo` will be replaced by the first element of `replacement` etc. etc.  Not specifying `typo` or `replacement` will not produce an error, but might negatively impact the results.  If your results look strange, or are missing values, look for typos related to those swims.
 
-There is a third argument to `swim_parse` called `avoid` which will be addressed in the section on reading in html results below.
+There is a third argument to `swim_parse`, called `avoid`, which will be addressed in the section on reading in html results below.
 
 ```{r swim_parse, message = FALSE}
-df <- swim_parse(file = file_read, typo = c("\n", "Indiana  University", ", University of"), replacement = c("\n", "Indiana University", ""))
+df <-
+  swim_parse(
+    file = file_read,
+    typo = c("Indiana  University", ", University of"),
+    replacement = c("Indiana University", "")
+  )
 ```
 
 Here are those same Women's 100 Breaststroke results, as a dataframe in tidy format:
 ```{r Swim Parse output, message = FALSE}
-df[67:69,]
+df[100:102,]
 ```
 *Please note that `SwimmeR` does not capture split times.*
 
@@ -83,7 +89,7 @@ df_1 <- swim_parse(file = url_read, avoid = c("NY State Rcd:"))
 ```
 
 ```{r swim_parse html output, message = FALSE}
-df_1[313:315,]
+df_1[358:360,]
 ```
 
 # Formatting Swimming Times
