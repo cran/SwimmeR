@@ -1,7 +1,7 @@
-7ddcc01e2f5a1d1569a251fb3fb17fb6 *DESCRIPTION
+7811762574ede02131609a2fce0a3c09 *DESCRIPTION
 552d8df6401d0cd2dc8f456cddbf0f97 *LICENSE
 16317bc98cf45fd0c696ef18f0d7a20b *NAMESPACE
-c5eae3dcfc62b28052e6fbff994c3d20 *NEWS.md
+90c9e1c104bcdbca51510bbd24b678e0 *NEWS.md
 ed2bf4b0bdd44f92aae1f497cafeb5cc *R/Course_Convert.R
 96630c6e9b92dc1296819f24f6dc530c *R/Course_Convert_DF.R
 a2e805e8d2875b3ea41921d1d6f7376a *R/King200Breast.R
@@ -28,13 +28,13 @@ ad74e9671bd250fc9b3a8693737875ca *R/sec_format.R
 653b4c012725ba9ce4e569b4c639b528 *R/swim_place.R
 18c233da4c3627e2d248f2e92c2e4d7e *R/tie_rescore.R
 3ae23ff1c90581c3e5651878b3705fff *R/utils-pipe.R
-0e33327de76d79431534371d6740b94c *README.md
-4a46fb8853ce27e5c674aaec8f1e97e6 *build/vignette.rds
+a237279a0fc5a2047a7cb0ef4cc15ebc *README.md
+544e4062c2463563d4efd24e8015bccf *build/vignette.rds
 7a5cccdaf852f36348202b0bf13ad397 *data/King200Breast.RData
 9c8f996e6764c05adc490ad7c473033c *data/King200Breast.rda
 3d2c50d68d40033657b4866080fceda7 *inst/doc/SwimmeR.R
 20587a84fc16b4ed8ccc66a1d809288b *inst/doc/SwimmeR.Rmd
-a7623857895e8de2443210433af1bf2d *inst/doc/SwimmeR.html
+136169e84e9981b35b825b679477f4eb *inst/doc/SwimmeR.html
 453194221e240e30baf87dd43a4b2dba *inst/extdata/11102019roc.pdf
 9a9adfc0db7f0bdd98718f674e4348b1 *inst/extdata/2020_NI_Champs_Qualifier_UNAC.hy3
 8c2dbd19301b2a5d5fd479394c5b0cc2 *inst/extdata/BigTen_WSWIM_2018.pdf
@@ -78,7 +78,7 @@ fbd68e7c8ab6f1b584909fe83aa97c74 *man/tie_rescore.Rd
 ced2da355f18627dffbabaa641c3a889 *tests/testthat.R
 c6191737120ce904d020f7747ee5b872 *tests/testthat/test-Course_Convert.R
 9276c168c737b50567e25d8c3c0fb54e *tests/testthat/test-Course_Convert_DF.R
-9fc0caaf09bce7fef704c535ff770084 *tests/testthat/test-Read_Results_works.R
+f711972c9b6234e23d086ceee59f6734 *tests/testthat/test-Read_Results_works.R
 52b6274ca36333bee78b481f4f6fc3c3 *tests/testthat/test-Swim_Parse_works.R
 e6accbe84ae0e9f34cd743fd63acfd9c *tests/testthat/test-get_mode.R
 35090a9bdfca8063f671ea17de2237f7 *tests/testthat/test-hy3_parse_works.R
