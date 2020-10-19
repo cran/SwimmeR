@@ -43,13 +43,21 @@ df_1 <- swim_parse(file = url_read, avoid = c("NY State Rcd:"))
 ## ----swim_parse html output, message = FALSE----------------------------------
 df_1[358:360,]
 
+## ----swim_parse_ISL, message = FALSE------------------------------------------
+url <- "https://github.com/gpilgrim2670/Pilgrim_Data/raw/master/ISL/ISL_2019_CollegePark_Day_1.pdf"
+url_read <- read_results(url)
+df_ISL <- swim_parse_ISL(file = url_read)
+
+## ----swim_parse_ISL output, message = FALSE-----------------------------------
+df_ISL[which(df$Name == "KING Lilly"),]
+
 ## ----formatting times---------------------------------------------------------
 data(King200Breast)
 King200Breast
 
 ## ----formatting times 2-------------------------------------------------------
 King200Breast <- King200Breast %>% 
-  mutate(Time_sec = sec_format(Time),
+  dplyr::mutate(Time_sec = sec_format(Time),
          Time_swim_2 = mmss_format(Time_sec))
 King200Breast
 
@@ -70,8 +78,8 @@ df
 
 ## ----get_mode-----------------------------------------------------------------
 df <- df %>% 
-  group_by(Name) %>% 
-  mutate(Team = get_mode(Team))
+  dplyr::group_by(Name) %>% 
+  dplyr::mutate(Team = get_mode(Team))
 df
 
 ## ----brackets 1---------------------------------------------------------------

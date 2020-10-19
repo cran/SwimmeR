@@ -14,7 +14,7 @@
 #' @importFrom purrr map_lgl
 #' @importFrom purrr map
 #'
-#' @param text output from \code{read_results}
+#' @param text output from \code{read_results} followed by \code{add_row_numbers}
 #' @return returns a dataframe with event names and row numbers to eventually be recombined with swimming results inside \code{swim_parse}
 
 #' @seealso \code{event_parse} is a helper function inside \code{\link{swim_parse}}
@@ -38,6 +38,7 @@ events <- events %>% # Addition
   stringr::str_replace_all("\\\n", "") %>%
   stringr::str_replace_all("\\(", "") %>%
   stringr::str_replace_all("\\)", "") %>%
+  # stringr::str_replace(".*(?=(Wom|Men|Boy|Girl))", "") %>% # new 10/16
   trimws()
 
 events <-
