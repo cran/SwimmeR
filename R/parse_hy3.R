@@ -31,7 +31,7 @@
 #' @param avoid a list of strings.  Rows in \code{x} containing these strings will not be included. For example "Pool:", often used to label pool records, could be passed to \code{avoid}.  The default is \code{avoid_default}, which contains many strings similar to "Pool:", such as "STATE:" and "Qual:".  Users can supply their own lists to \code{avoid}.
 #' @param typo a list of strings that are typos in the original results.  \code{swim_parse} is particularly sensitive to accidental double spaces, so "Central  High School", with two spaces between "Central" and "High" is a problem, which can be fixed.  Pass "Central High School" to \code{typo}.  Unexpected commas as also an issue, for example "Texas, University of" should be fixed using \code{typo} and \code{replacement}
 #' @param replacement a list of fixes for the strings in \code{typo}.  Here one could pass "Central High School" (one space between "Central" and "High") and "Texas" to \code{replacement} fix the issues described in \code{typo}
-#' @return returns a dataframe with columns \code{Name}, \code{Place}, \code{Grade}, \code{School}, \code{Prelims_Time}, \code{Finals_Time}, & \code{Event}.  May also contain \code{Seed_Time}, \code{USA_ID}, and/or \code{Birthdate}.  Note all swims will have a \code{Finals_Time}, even if that time was actually swam in the prelims (i.e. a swimmer did not qualify for finals).  This is so that final results for an event can be generated from just one column.
+#' @return returns a dataframe with columns \code{Name}, \code{Place}, \code{Age}, \code{Team}, \code{Prelims_Time}, \code{Finals_Time}, & \code{Event}.  May also contain \code{Seed_Time}, \code{USA_ID}, and/or \code{Birthdate}.  Note all swims will have a \code{Finals_Time}, even if that time was actually swam in the prelims (i.e. a swimmer did not qualify for finals).  This is so that final results for an event can be generated from just one column.
 #'
 #' @seealso \code{parse_hy3} must be run on the output of \code{\link{read_results}}
 #' @seealso \code{parse_hy3} runs inside of \code{\link{swim_parse}}
@@ -47,13 +47,20 @@ parse_hy3 <-
 
     replacement_default <- c("typo")
 
+    #### testing ####
+    # file <- read_results(system.file("extdata", "2020_NI_Champs_Qualifier_UNAC.hy3", package = "SwimmeR")) # works 11/12
+    # file <- read_results(system.file("extdata", "Meet Results-2019 CIF SWIMMING AND  DIVING CHAMPIONSHIPS-10May2019-001.hy3", package = "SwimmeR")) # doesn't work 11/12
+    # file <- add_row_numbers(text = file)
+    # avoid = avoid_minimal
+    # typo = typo_default
+    # replacement = replacement_default
+
     file <- file %>%
       .[purrr::map_lgl(., ~ !any(stringr::str_detect(., avoid)))] %>%
       stringr::str_replace_all(stats::setNames(replacement, typo))
 
 
     # data beginning with E1M or E1F contains results from each swim (male and female respectively)
-    # if(stringr::str_detect(file, "^E1M.*|^E1F.*") -- TRUE){
     entry <- file %>%
       stringr::str_extract_all("^E1M.*|^E1F.*") %>%
       .[purrr::map(., length) > 0] %>%
@@ -78,7 +85,13 @@ parse_hy3 <-
     rownames(entry) <- NULL
 
     entry <- data.frame(entry, stringsAsFactors = FALSE)
-    entry <- entry[c("X2", "X3", "X9")]
+
+    if (stringr::str_detect(entry$`X2`[1], "^\\d{2,3}[:alpha:]$")) {
+      entry <- entry[c("X1", "X2", "X7")]
+    } else {
+      entry <- entry[c("X2", "X3", "X9")]
+    }
+
     colnames(entry) <- c("ID", "Event", "Seed_Time")
     entry$Row_Numb <- as.numeric(entry_rows)
 
@@ -152,12 +165,12 @@ parse_hy3 <-
     # add prelims and finals times as well as finals places to entry
     entry <-
       interleave_results(entries = entry,
-                       results = finals,
-                       type = "individual")
+                         results = finals,
+                         type = "individual")
     entry <-
       interleave_results(entries = entry,
-                       results = prelims,
-                       type = "individual")
+                         results = prelims,
+                         type = "individual")
 
     entry <-
       interleave_results(entries = entry,
@@ -225,9 +238,21 @@ parse_hy3 <-
       purrr::map(unique) %>%
       purrr::map(head, 7)
 
+    # works for CA results 11/12 - reenable when completing hy3 work
+    # swimmer <- swimmer %>%
+    #   purrr::map(str_remove_all, "^\\d{1,4}$") %>%
+    #   purrr::map(str_remove_all, "^N$") %>%
+    #   purrr::map(str_remove_all, "^D1F\\d{1,}") %>%
+    #   purrr::map(str_remove_all, "^D1M\\d{1,}")
+
     swimmer <- data.frame(swimmer, stringsAsFactors = FALSE) %>%
       t()
     rownames(swimmer) <- NULL
+
+    # works for CA results 11/12 - reenable when completing hy3 work
+    # swimmer <- data.frame(swimmer, stringsAsFactors = FALSE) %>%
+    #   na_if("") %>%
+    #   fill_left()
 
     swimmer <- data.frame(swimmer, stringsAsFactors = FALSE)
 
@@ -245,7 +270,7 @@ parse_hy3 <-
           stringr::str_detect(X6, "[A-Z]{3,}") == FALSE &
             stringr::str_length(X6) >= 6 ~ X6
         ),
-        Grade = dplyr::case_when(
+        Age = dplyr::case_when(
           stringr::str_length(X5) < 6 &
             stringr::str_length(X5) >= 1 &
             X5 != "0" & stringr::str_detect(X4, "[A-Z]{3,}") == FALSE ~ X5,
@@ -256,7 +281,7 @@ parse_hy3 <-
         )
       ) %>%
       dplyr::mutate(Row_Numb = as.numeric(swimmer_rows)) %>%
-      dplyr::select(ID, First, USA_ID, Birthdate, Grade, Row_Numb)
+      dplyr::select(ID, First, USA_ID, Birthdate, Age, Row_Numb)
 
     swimmer <- swimmer %>%
       dplyr::mutate(
@@ -288,8 +313,8 @@ parse_hy3 <-
       purrr::map(paste, collapse = " ")
 
     team <-
-      data.frame(School = unlist(team), Row_Numb = as.numeric(team_rows)) %>%
-      dplyr::mutate(School = stringr::str_remove(School, "^C1[A-Z]{1,} ")) %>%
+      data.frame(Team = unlist(team), Row_Numb = as.numeric(team_rows)) %>%
+      dplyr::mutate(Team = stringr::str_remove(Team, "^C1[A-Z]{1,} ")) %>%
       dplyr::mutate(
         Row_Min = as.numeric(Row_Numb),
         Row_Max = dplyr::lead(Row_Min, 1L, default = length(file)) - 1,
@@ -390,6 +415,10 @@ parse_hy3 <-
                        results = relay_prelims,
                        type = "relay")
 
+    # works for CA results 11/12 - reenable when completing hy3 work
+    # relay  <-
+    #   transform(relay, Finals_Place = relay_places$Finals_Place[findInterval(Row_Min, relay_places$Row_Numb, all.inside = TRUE)])
+
     relay <-
       interleave_results(entries = relay,
                          results = relay_places,
@@ -419,8 +448,8 @@ parse_hy3 <-
       relay <- data.frame(
         Name = character(),
         Place = numeric(),
-        Grade = character(),
-        School = character(),
+        Age = character(),
+        Team = character(),
         Prelims_Time = character(),
         Finals_Time = character(),
         Row_Numb = character(),
@@ -437,7 +466,7 @@ parse_hy3 <-
     data <- dplyr::bind_rows(data, relay)
 
     data  <-
-      transform(data, School = team$School[findInterval(Row_Numb, team$Row_Min)])
+      transform(data, Team = team$Team[findInterval(Row_Numb, team$Row_Min)])
 
     data <- data %>%
       dplyr::mutate(

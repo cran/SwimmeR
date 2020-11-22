@@ -6,50 +6,77 @@ knitr::opts_chunk$set(
 
 ## ----setup, message = FALSE---------------------------------------------------
 library(SwimmeR)
-library(rvest)
 library(dplyr)
 library(ggplot2)
 library(scales)
 
 ## ----read_results, message = FALSE--------------------------------------------
-file_path <- system.file("extdata", "Texas-Florida-Indiana.pdf", package = "SwimmeR")
+TX_FL_IN_path <- system.file("extdata", "Texas-Florida-Indiana.pdf", package = "SwimmeR")
 
-file_read <- read_results(file = file_path)
+TX_FL_IN_text <- read_results(file = TX_FL_IN_path)
 
 ## ----read_results output, message = FALSE-------------------------------------
-file_read[294:303]
+TX_FL_IN_text[294:303]
 
 ## ----swim_parse, message = FALSE----------------------------------------------
-df <-
+TX_FL_IN_df <-
   swim_parse(
-    file = file_read,
+    file = TX_FL_IN_text,
     typo = c("Indiana  University", ", University of"),
     replacement = c("Indiana University", "")
   )
 
 ## ----Swim Parse output, message = FALSE---------------------------------------
-df[100:102,]
+TX_FL_IN_df[100:102,]
 
 ## ----read_results html, message = FALSE---------------------------------------
-url <- "http://www.nyhsswim.com/Results/Girls/2003/NYS/Single.htm"
-url_read <- read_results(file = url, node = "pre")
+NYS_link <- "http://www.nyhsswim.com/Results/Girls/2003/NYS/Single.htm"
+NYS_text <- read_results(file = NYS_link, node = "pre")
 
 ## ----read_results html output, message = FALSE--------------------------------
-url_read[587:598]
+NYS_text[587:598]
 
 ## ----swim_parse html, message = FALSE-----------------------------------------
-df_1 <- swim_parse(file = url_read, avoid = c("NY State Rcd:"))
+NYS_df <- swim_parse(file = NYS_text, avoid = c("NY State Rcd:"))
 
 ## ----swim_parse html output, message = FALSE----------------------------------
-df_1[358:360,]
+NYS_df[358:360,]
+
+## ----splits output, message = FALSE-------------------------------------------
+TX_FL_IN_df_splits <-
+  swim_parse(
+    read_results(TX_FL_IN_path),
+    typo = c("Indiana  University", ", University of"),
+    replacement = c("Indiana University", ""),
+    splits = TRUE,
+    split_length = 50
+  )
+
+TX_FL_IN_df_splits[100:102,]
+
+## ----relay swimmers output, message = FALSE-----------------------------------
+TX_FL_IN_df_relay_swimmers <-
+  swim_parse(
+    read_results(TX_FL_IN_path),
+    typo = c("Indiana  University", ", University of"),
+    replacement = c("Indiana University", ""),
+    relay_swimmers = TRUE
+  )
+
+TX_FL_IN_df_relay_swimmers[1:3,]
 
 ## ----swim_parse_ISL, message = FALSE------------------------------------------
-url <- "https://github.com/gpilgrim2670/Pilgrim_Data/raw/master/ISL/ISL_2019_CollegePark_Day_1.pdf"
-url_read <- read_results(url)
-df_ISL <- swim_parse_ISL(file = url_read)
+file_url <-
+  "https://github.com/gpilgrim2670/Pilgrim_Data/raw/master/ISL/Season_1_2019/ISL_16112019_CollegePark_Day_1.pdf"
 
-## ----swim_parse_ISL output, message = FALSE-----------------------------------
-df_ISL[which(df$Name == "KING Lilly"),]
+if (SwimmeR:::is_link_broken(file_url) == TRUE) {
+  warning("External data unavailable")
+} else {
+  file_read <- read_results(file_url)
+  df_ISL <- swim_parse_ISL(file = file_read)
+  df_ISL[which(df_ISL$Name == "KING Lilly"), ]
+  
+}
 
 ## ----formatting times---------------------------------------------------------
 data(King200Breast)
@@ -82,22 +109,22 @@ df <- df %>%
   dplyr::mutate(Team = get_mode(Team))
 df
 
-## ----brackets 1---------------------------------------------------------------
+## ----brackets 1, fig.dim = c(8, 5)--------------------------------------------
 teams <- c("red", "orange", "yellow", "green", "blue", "indigo", "violet")
 draw_bracket(teams = teams)
 
-## ----brackets 2---------------------------------------------------------------
+## ----brackets 2, fig.dim = c(8, 5)--------------------------------------------
 round_two <- c("red", "yellow", "blue", "indigo")
 draw_bracket(teams = teams,
              round_two = round_two)
 
-## ----brackets 3---------------------------------------------------------------
+## ----brackets 3, fig.dim = c(8, 5)--------------------------------------------
 round_three <- c("red", "blue")
 draw_bracket(teams = teams,
              round_two = round_two,
              round_three = round_three)
 
-## ----brackets champion--------------------------------------------------------
+## ----brackets champion, fig.dim = c(8, 5)-------------------------------------
 champion <- "red"
 draw_bracket(teams = teams,
              round_two = round_two,

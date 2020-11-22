@@ -1,3 +1,22 @@
+# Swimmer 0.6.0 - November 19 2020
+* added functionality to `swim_parse` to output relay swimmers
+* added functionality to `swim_parse_ISL` to output relay swimmers
+* added functionality to `swim_parse_ISL` to output splits
+
+# Swimmer 0.5.4 - November 4 2020
+* added functionality to output splits to `swim_parse`, works but more testing needed
+
+# SwimmeR 0.5.3 - October 23 2020
+* added helper function list_transform to clean up `swim_parse` and other functions
+
+# SwimmeR 0.5.2 - October 21 2020
+* fixed issue regarding athletes with many names, or with punctuated names
+* fixed issue regarding the use of "*" in front of an athlete's name as a designator
+* updates to testing to reflect above
+
+# SwimmeR 0.5.1 - October 20 2020
+* fixed issue caused by a change in ISL results format
+
 # SwimmeR 0.5.0
 * added `swim_parse_ISL` function, for reading in results from the International Swimming League
 * updated vignette

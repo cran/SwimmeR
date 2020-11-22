@@ -47,6 +47,25 @@ utils::globalVariables(
     "Heat",
     "Exhibition",
     "Time",
-    "Lane"
+    "Lane",
+    "Time_Score_String",
+    "Grade_String",
+    "Name_String",
+    "Row_Fill",
+    "Row_Numb_2",
+    "minimum_row",
+    "maximum_row",
+    "Colon_String",
+    "old_names",
+    "new_names",
+    "flag",
+    "split_length",
+    "split_len",
+    "Relay_Swimmer_1",
+    "Relay_Swimmer_2",
+    "Relay_Swimmer_3",
+    "Relay_Swimmer_4",
+    "Split_50",
+    "Age"
   )
 )
