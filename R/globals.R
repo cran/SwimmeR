@@ -8,6 +8,14 @@ utils::globalVariables(
     "V5",
     "V6",
     "V7",
+    "V8",
+    "V9",
+    "V10",
+    "V11",
+    "V12",
+    "V13",
+    "V14",
+    "V15",
     "Event_Row_Min",
     "Grade",
     "Finals_Time",
@@ -66,6 +74,14 @@ utils::globalVariables(
     "Relay_Swimmer_3",
     "Relay_Swimmer_4",
     "Split_50",
-    "Age"
+    "Age",
+    "typo",
+    "replacement",
+    "clean",
+    "Switch",
+    "avoid",
+    "Place_1",
+    "Min_C_Place",
+    "Prelims_Place"
   )
 )

@@ -7,8 +7,6 @@ knitr::opts_chunk$set(
 ## ----setup, message = FALSE---------------------------------------------------
 library(SwimmeR)
 library(dplyr)
-library(ggplot2)
-library(scales)
 
 ## ----read_results, message = FALSE--------------------------------------------
 TX_FL_IN_path <- system.file("extdata", "Texas-Florida-Indiana.pdf", package = "SwimmeR")
@@ -22,12 +20,12 @@ TX_FL_IN_text[294:303]
 TX_FL_IN_df <-
   swim_parse(
     file = TX_FL_IN_text,
-    typo = c("Indiana  University", ", University of"),
-    replacement = c("Indiana University", "")
+    typo = c("Indiana  University", ", University of"), # not required in versions >= 0.7.0
+    replacement = c("Indiana University", "") # not required in versions >= 0.7.0
   )
 
 ## ----Swim Parse output, message = FALSE---------------------------------------
-TX_FL_IN_df[100:102,]
+TX_FL_IN_df[102:104,]
 
 ## ----read_results html, message = FALSE---------------------------------------
 NYS_link <- "http://www.nyhsswim.com/Results/Girls/2003/NYS/Single.htm"
@@ -46,8 +44,8 @@ NYS_df[358:360,]
 TX_FL_IN_df_splits <-
   swim_parse(
     read_results(TX_FL_IN_path),
-    typo = c("Indiana  University", ", University of"),
-    replacement = c("Indiana University", ""),
+    # typo = c("Indiana  University", ", University of"), # not required in versions >= 0.7.0
+    # replacement = c("Indiana University", ""), # not required in versions >= 0.7.0
     splits = TRUE,
     split_length = 50
   )
@@ -58,8 +56,8 @@ TX_FL_IN_df_splits[100:102,]
 TX_FL_IN_df_relay_swimmers <-
   swim_parse(
     read_results(TX_FL_IN_path),
-    typo = c("Indiana  University", ", University of"),
-    replacement = c("Indiana University", ""),
+    # typo = c("Indiana  University", ", University of"), # not required in versions >= 0.7.0
+    # replacement = c("Indiana University", ""), # not required in versions >= 0.7.0
     relay_swimmers = TRUE
   )
 
@@ -89,13 +87,20 @@ King200Breast <- King200Breast %>%
 King200Breast
 
 ## ----formatted times plot, fig.height = 5, fig.width = 7----------------------
-King200Breast %>% 
-  ggplot(aes(x = Date, y = Time_sec)) +
-  geom_point() +
-  scale_y_continuous(labels = scales::trans_format("identity", mmss_format)) +
-  theme_classic() +
-  labs(y= "Time",
-       title = "Lilly King NCAA 200 Breaststroke")
+plot(King200Breast$Date, King200Breast$Time_sec, axes = FALSE, ann = FALSE)
+axis(1, at = c(16800, 17200, 17600, 18000), labels = c(2016, 2017, 2018, 2019))
+axis(2, at = c(125, 130, 135, 140), labels = mmss_format(c(125, 130, 135, 140)), las = 1)
+par(mar = c(5,7,4,2) + 0.3)
+
+
+## ----formatted times ggplot, eval = FALSE-------------------------------------
+#  King200Breast %>%
+#    ggplot(aes(x = Date, y = Time_sec)) +
+#    geom_point() +
+#    scale_y_continuous(labels = scales::trans_format("identity", mmss_format)) +
+#    theme_classic() +
+#    labs(y= "Time",
+#         title = "Lilly King NCAA 200 Breaststroke")
 
 ## ----get_mode setup-----------------------------------------------------------
 Name <- c(rep("Lilly King", 5), rep("James Sullivan", 3))
