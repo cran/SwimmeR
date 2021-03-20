@@ -75,6 +75,7 @@ utils::globalVariables(
     "Relay_Swimmer_4",
     "Split_50",
     "Age",
+    "Para",
     "typo",
     "replacement",
     "clean",
@@ -82,6 +83,9 @@ utils::globalVariables(
     "avoid",
     "Place_1",
     "Min_C_Place",
-    "Prelims_Place"
+    "Prelims_Place",
+    "First_Name",
+    "Name_2",
+    "Name_3"
   )
 )

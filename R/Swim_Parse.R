@@ -90,8 +90,8 @@ Swim_Parse <-
         "[A-S]\\:", # to allow EVENT:
         "[U-Z]\\:", # to allow EVENT:
         "[A-MO-Z]T\\:", # to allow EVENT:
-        "[a-q]\\:", # want to make sure to include r: for reaciton times in splits lines
-        "[s-z]\\:", # want to make sure to include r: for reaciton times in splits lines
+        "[a-q]\\:", # want to make sure to include r: for reaction times in splits lines
+        "[s-z]\\:", # want to make sure to include r: for reaction times in splits lines
         "[:alpha:]r\\:",
         "\\.\\:",
         "\\d\\:\\s",
@@ -117,10 +117,12 @@ Swim_Parse <-
     avoid_minimal <- c("^\\s{1,}r\\:")
 
     #### testing ####
-    # file <- read_results("https://cdn.swimswam.com/wp-content/uploads/2018/08/2004-Division-I-NCAA-Championships-Men-results1.pdf")
+    # file <- read_results("https://data.ohiostatebuckeyes.com/livestats/m-swim/210302F001.htm")
+    # file <- read_results(system.file("extdata", "Texas-Florida-Indiana.pdf", package = "SwimmeR"))
+
     # avoid <- avoid_default
-    # typo <- typo_default
-    # replacement <- replacement_default
+    # typo <- c("typo")
+    # replacement <- c("typo")
 
     #### combine avoid and avoid_default
     avoid <- unique(c(avoid, avoid_default))
@@ -166,8 +168,11 @@ Swim_Parse <-
       Name_String <-
         "_?[:alpha:]+\\s?\\'?[:alpha:\\-\\'\\.]*\\s?[:alpha:\\-\\'\\.]*\\s?[:alpha:\\-\\'\\.]*,?\\s?[:alpha:\\-\\'\\.]*\\s?[:alpha:]*\\s?[:alpha:]*\\s?[:alpha:]*\\.?,? [:alpha:]+\\s?[:alpha:\\-\\'\\.]*\\s?[:alpha:\\-\\']*\\s?[:alpha:]*\\s?[:alpha:]*\\s?[:alpha:\\.]*"
       Time_Score_String <- "\\d{0,2}\\:?\\d{1,3}\\.\\d{2}"
-      Time_Score_Specials_String <- paste0(Time_Score_String, "|^NT$|^NP$|^DQ$|^NS$|^SCR$")
-      Age_String <- "^SR$|^JR$|^SO$|^FR$|^[:digit:]{1,3}$"
+      Time_Score_Specials_String <- paste0("^NT$|^NP$|^DQ$|^NS$|^SCR$|^x?X?", Time_Score_String, "x?X?$")
+      Time_Score_Specials_String_Extract <- paste0(Time_Score_String, "|^NT$|^NP$|^DQ$|^NS$|^SCR$")
+      Age_String <- "^SR$|^JR$|^SO$|^FR$|^[:digit:]{1,3}$|^\\d{1,3}\\-\\d{2}$"
+      Para_String <- "^SB?M?\\d{1,2}$"
+      Reaction_String <- "^\\+\\s?\\d\\.\\d{3}$|^\\-\\s?\\d\\.\\d{3}$|^0.00$"
       # Colon_String <- "\\:\\d\\d"
 
       #### clean input data ####
@@ -179,10 +184,14 @@ Swim_Parse <-
         .[purrr::map_lgl(., stringr::str_detect, paste0(Time_Score_String,"|DQ|SCR"))] %>% # must have \\.\\d\\d because all swimming and diving times do
         .[purrr::map_lgl(., stringr::str_detect, "[:alpha:]")] %>%
         .[purrr::map_lgl(., stringr::str_detect, "r\\:\\+?\\-?\\s?\\d", negate = TRUE)] %>% # remove reaction times
+        .[purrr::map_lgl(., stringr::str_detect, "^50m", negate = TRUE)] %>%  # remove British results that start with 50m for splits lines
         # .[purrr::map_lgl(., stringr::str_detect, "[:alpha:]\\:", negate = TRUE)] %>% # remove records
-        .[purrr::map_dbl(., stringr::str_count, "\\)") < 2] %>%  # remove inline splits from older style hy-tek results circa 2005
+        .[purrr::map_dbl(., stringr::str_count, "\\d\\)") < 2] %>%  # remove inline splits from older style hy-tek results circa 2005
         # .[purrr::map_lgl(., stringr::str_detect, " \\:\\d", negate = TRUE)] %>% # remove other inline splits from older style hytek results circa 2005
         stringr::str_replace_all("\\s?[&%]\\s?", " ") %>% # added 8/21 for removing "&" and "%" as record designator
+        stringr::str_remove_all("(?<=\\d\\.\\d{2}\\s?)[:punct:]") %>% # remove symbols attached to times as record designator
+        stringr::str_remove_all("(?<=\\.\\d{2}\\s?)[A-WYZ|\\$|q](?=\\s)") %>% # remove letters attached to times as record designator
+        stringr::str_replace_all(" [qQ](?=\\d{1,5} )", "   ") %>% # remove q|Q attached to points
         # removed J etc. from next to swim, but does not remove X or x (for exhibition tracking)
         stringr::str_replace_all("[A-WYZa-wyz]+(\\d{1,2}\\:\\d{2}\\.\\d{2})", "\\1") %>%
         stringr::str_replace_all("(\\d{1,2}\\:\\d{2}\\.\\d{2})[A-WYZa-wyz]+", "\\1") %>%
@@ -209,6 +218,9 @@ Swim_Parse <-
         # stringr::str_replace_all("\\*(?=[:digit:])", "_") %>% # for * prior to place for foreign athletes and sometimes ties
         stringr::str_replace_all("\\*(?=[:alpha:])", "_") %>% # for * prior to name for foreign athletes
         stringr::str_replace_all("\\*", "  ") %>%
+        stringr::str_replace_all("(?<=\\d)\\.\\s{1,}(?=[:alpha:])", "  ") %>% # for British results where places are 1. Name
+        stringr::str_replace_all("(?<=\\s)\\+\\s(?=[:digit:])", "  +") %>% # for reaction times
+        stringr::str_replace_all("(?<=\\s)\\-\\s(?=[:digit:])", "  -") %>% # for reaction times
         trimws()
 
 
@@ -216,24 +228,29 @@ Swim_Parse <-
       data_cleaned <- data_cleaned %>%
         stringr::str_replace_all("(?<=\\d)\\s+[:upper:]?\\s+(?=\\d)", "  ") %>% # letters like P or M to denote pool or meet record
         stringr::str_replace_all("(?<=\\d) (?=[:alpha:])", "  ") %>% # mostly to split place and name
-        stringr::str_replace_all("(?<=\\d) (?=_)", "  ") %>% # mostly to split place and name, if name is precended by "_" as a stand-in for "*"
+        stringr::str_replace_all("(?<=\\d) (?=_)", "  ") %>% # mostly to split place and name, if name is preceded by "_" as a stand-in for "*"
         stringr::str_replace_all("(?<=\\d) (?=\\d)", "  ") %>% # mostly to split place team names that start with a number, like in NYS results (5-Fairport etc.)
         stringr::str_replace_all("(?<=[:alpha:]),(?=[:alpha:])", ", ") %>% # split names that don't have a space between last,first
-        stringr::str_replace_all("(?<=[:alpha:])\\. (?=[:digit:])", "\\.  ") %>% # split abreviated team names like Southern Cal. and times
-        stringr::str_replace_all("(?<=\\d) (?=_)", "  ") %>% # spacing between place and atheltes with */_ leading name
+        stringr::str_replace_all("(?<=[:alpha:])\\. (?=[:digit:])", "\\.  ") %>% # split abbreviated team names like Southern Cal. and times
+        stringr::str_replace_all("(?<=\\d) (?=_)", "  ") %>% # spacing between place and athletes with */_ leading name
         stringr::str_replace_all("(?<=\\)) (?=[:alpha:])", "  ") %>% # spacing between place) and names
+        stringr::str_replace_all("\\((?=[:digit:])", "  \\(") %>% # spacing between (YoB) and name, for British results
         stringr::str_replace_all(" FR ", "       FR      ") %>% # split age and team
         stringr::str_replace_all(" SO ", "       SO      ") %>% # split age and team
         stringr::str_replace_all(" JR ", "       JR      ") %>% # split age and team
         stringr::str_replace_all(" SR ", "       SR      ") %>% # split age and team
+        stringr::str_replace_all("(SM?B?1\\d{1})(\\d{1,2})", "\\1   \\2") %>%  # split para classification and age
+        stringr::str_replace_all(" NT ", "       NT      ") %>% # split prelim and final
         stringr::str_replace_all("(?<=[:alpha:])\\s{2,3}(?=[:alpha:])", " ") %>% # testing 12/21/2020 would help with typos
         stringr::str_replace_all("(?<=[:alpha:]) (?=\\d)", "  ") %>% # split name and age
+        stringr::str_replace_all("(?<=[:alpha:])(\\d{1,3}\\-\\d{2})", "  \\1  ") %>% # split name and yyy-mm age
         stringr::str_replace_all("(?<=\\,) (?=\\d)", "  ") %>% # split name and age if name is so long that it ends with a ","
         stringr::str_replace_all("(?<=\\d) (?=\\d{1,}$)", "  ") %>%  # split off row_numb
         stringr::str_replace_all("(?<=\\.\\d\\d\\s{1,10}\\d?\\d?\\:?\\d?\\d\\.\\d\\d)\\s{1,10}[:alpha:]{1,5}\\d?\\s{1,10}(?=\\d{1,})", "  ") %>%  # removes "AAC" or "AAA" or "NYS" or "SEC1" etc. from after finals time
         # stringr::str_replace_all("NYS|AAA|AAC|SEC\\d{1,2}", "  ") %>%
         # stringr::str_replace_all("SEC\\d{1,2}", "  ") %>%  # for old NYS results
-        stringr::str_replace_all("\\d{3}\\.\\d{2}\\s+(\\d{3}\\.\\d{2})\\s+\\d{3}\\.\\d{2}\\s+(\\d{3}\\.\\d{2})", "\\1  \\2") # for old NCAA results with diving scores and DDs
+        stringr::str_replace_all("\\d{3}\\.\\d{2}\\s+(\\d{3}\\.\\d{2})\\s+\\d{3}\\.\\d{2}\\s+(\\d{3}\\.\\d{2})", "\\1  \\2") %>%  # for old NCAA results with diving scores and DDs
+        stringr::str_replace_all("(?<=\\s)S(?=B?M?\\d{1,2})", "  S") # for para classifications
 
       #### splits data into variables by splitting at multiple (>= 2) spaces ####
       data_cleaned <-
@@ -249,7 +266,8 @@ Swim_Parse <-
       data_length_6 <- data_cleaned[purrr::map(data_cleaned, length) == 6]
       data_length_7 <- data_cleaned[purrr::map(data_cleaned, length) == 7]
       data_length_8 <- data_cleaned[purrr::map(data_cleaned, length) == 8]
-      # data_length_9 <- data_cleaned[purrr::map(data_cleaned, length) == 9]
+      data_length_9 <- data_cleaned[purrr::map(data_cleaned, length) == 9]
+      # data_length_10 <- data_cleaned[purrr::map(data_cleaned, length) == 10]
 
       # treatment of DQs new 8/19
       suppressWarnings(DQ <-
@@ -259,42 +277,102 @@ Swim_Parse <-
       DQ_length_4 <- DQ[purrr::map(DQ, length) == 4]
       # DQ_length_5 <- DQ[purrr::map(DQ, length) == 5]
 
-      # #### nine variables
-      # if (length(data_length_9) > 0) {
-      #   suppressWarnings(
-      #     df_9 <- data_length_9 %>%
-      #       list_transform()
-      #   )
-      # } else {
-      #   df_9 <- data.frame(
-      #     Row_Numb = character(),
-      #     stringsAsFactors = FALSE
-      #   )
-      # }
+      #### nine variables
+      if (length(data_length_9) > 0) {
+        suppressWarnings(
+          df_9 <- data_length_9 %>%
+            list_transform() %>%
+            dplyr::mutate(Para = dplyr::case_when(stringr::str_detect(V3, Para_String) == TRUE ~ V3,
+                                                  TRUE ~ "NA"),
+                          Age = dplyr::case_when(stringr::str_detect(V3, Age_String) == TRUE ~ V3,
+                                                 stringr::str_detect(V4, Age_String) == TRUE ~ V4,
+                                                 TRUE ~ "NA")) %>%
+            dplyr::na_if("NA") %>%
+            dplyr::select(
+              Place = V1,
+              Name = V2,
+              Para,
+              Age,
+              Team = V5,
+              Prelims_Time = V6,
+              Finals_Time = V7,
+              Points = V8,
+              Row_Numb = V9
+            )
+        )
+      } else {
+        df_9 <- data.frame(
+          Row_Numb = character(),
+          stringsAsFactors = FALSE
+        )
+      }
 
       #### eight variables
       if (length(data_length_8) > 0) {
         suppressWarnings(
           df_8 <- data_length_8 %>%
             list_transform() %>%
-            filter(stringr::str_detect(V1, "\\.") == FALSE) %>% # occasionally olde results with DQs in the splits will end up here - this removes them
+            filter(stringr::str_detect(V1, "\\.") == FALSE) %>% # occasionally old results with DQs in the splits will end up here - this removes them
             dplyr::na_if("") %>%
+            dplyr::mutate(
+              Para = dplyr::case_when(stringr::str_detect(V3, Para_String) == TRUE ~ V3,
+                                      TRUE ~ "NA"),
+              Age = dplyr::case_when(
+                stringr::str_detect(V3, Age_String) == TRUE ~ V3,
+                stringr::str_detect(V4, Age_String) == TRUE ~ V4,
+                TRUE ~ "NA"
+              )
+            ) %>%
+            dplyr::mutate(
+              Team = dplyr::case_when(
+                stringr::str_detect(V3, Age_String) == TRUE ~ V4,
+                stringr::str_detect(V3, Para_String) == TRUE &
+                  stringr::str_detect(V4, Age_String) == TRUE ~ V5,
+                TRUE ~ "NA"
+              )
+            ) %>%
+            dplyr::mutate(
+              Prelims_Time = dplyr::case_when(
+                stringr::str_detect(V4, Time_Score_Specials_String) == TRUE &
+                  stringr::str_detect(V5, Time_Score_Specials_String) == TRUE ~ V4,
+                stringr::str_detect(V5, Time_Score_Specials_String) == TRUE &
+                  stringr::str_detect(V6, Time_Score_Specials_String) == TRUE ~ V5,
+                stringr::str_detect(V6, Time_Score_Specials_String) == TRUE &
+                  stringr::str_detect(V7, Time_Score_Specials_String) == TRUE ~ V6,
+                TRUE ~ "NA"
+              ),
+              Finals_Time = dplyr::case_when(
+                stringr::str_detect(V4, Time_Score_Specials_String) == TRUE &
+                  stringr::str_detect(V5, Time_Score_Specials_String) == TRUE ~ V5,
+                stringr::str_detect(V5, Time_Score_Specials_String) == TRUE &
+                  stringr::str_detect(V6, Time_Score_Specials_String) == TRUE ~ V6,
+                stringr::str_detect(V6, Time_Score_Specials_String) == TRUE &
+                  stringr::str_detect(V7, Time_Score_Specials_String) == TRUE ~ V7,
+                TRUE ~ "NA"
+              ),
+              Points = dplyr::case_when(
+                stringr::str_detect(V5, Time_Score_Specials_String) == TRUE &
+                  stringr::str_detect(V6, Time_Score_Specials_String) == TRUE &
+                  stringr::str_detect(V7, "^\\d{1,4}\\.?\\d?\\d?$") == TRUE ~ V7,
+                TRUE ~ "NA"
+              )
+            ) %>%
+            dplyr::na_if("NA") %>%
             dplyr::select(
               Place = V1,
               Name = V2,
-              Age = V3,
-              Team = V4,
-              Prelims_Time = V5,
-              Finals_Time= V6,
-              Points = V7,
+              Age,
+              Para,
+              Team,
+              Prelims_Time,
+              Finals_Time,
+              Points,
               Row_Numb = V8
             )
         )
       } else {
-        df_8 <- data.frame(
-          Row_Numb = character(),
-          stringsAsFactors = FALSE
-        )
+        df_8 <- data.frame(Row_Numb = character(),
+                           stringsAsFactors = FALSE)
       }
 
 
@@ -303,7 +381,7 @@ Swim_Parse <-
         suppressWarnings(
           df_7 <- data_length_7 %>%
             list_transform() %>%
-            dplyr::mutate(              Place = dplyr::case_when(stringr::str_detect(V1, "\\d") == TRUE ~ V1,
+            dplyr::mutate(Place = dplyr::case_when(stringr::str_detect(V1, "\\d") == TRUE ~ V1,
                                                                  TRUE ~ "10000"),
               Age = dplyr::case_when(stringr::str_detect(V3, Age_String) == TRUE ~ V3,
                                                  TRUE ~ "NA"),
@@ -369,9 +447,12 @@ Swim_Parse <-
               ),
               Age = dplyr::case_when(stringr::str_detect(V3, Age_String) == TRUE ~ V3,
                                      TRUE ~ "NA"),
+              Para = dplyr::case_when(stringr::str_detect(V3, Para_String) == TRUE ~ V3,
+                                      TRUE ~ "NA"),
               Team = dplyr::case_when(
                 stringr::str_detect(V3, Time_Score_Specials_String) == TRUE ~ V2,
                 stringr::str_detect(V3, Time_Score_Specials_String) == FALSE &
+                  stringr::str_detect(V3, Para_String) == FALSE &
                   stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V3,
                 stringr::str_detect(V3, Age_String) == TRUE ~ V4,
                 TRUE ~ "NA"
@@ -379,7 +460,7 @@ Swim_Parse <-
               Prelims_Time = dplyr::case_when(
                 stringr::str_detect(V3, Time_Score_Specials_String) == TRUE &
                   stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V3,
-                # stringr::str_detect(V4, Time_Score_Specials_String) == TRUE &
+                stringr::str_detect(V4, Time_Score_Specials_String) == TRUE &
                 stringr::str_detect(V5, Time_Score_Specials_String) == TRUE ~ V4,
                 TRUE ~ "NA"
               ),
@@ -403,6 +484,7 @@ Swim_Parse <-
             dplyr::select(Place,
                           Name,
                           Age,
+                          Para,
                           Team,
                           Prelims_Time,
                           Finals_Time,
@@ -432,10 +514,16 @@ Swim_Parse <-
                 TRUE ~ "NA"
               ),
               Age = dplyr::case_when(stringr::str_detect(V2, Age_String) == TRUE ~ V2,
+                                     stringr::str_detect(V3, Age_String) == TRUE ~ V3,
                           TRUE ~ "NA"),
+              Para = dplyr::case_when(stringr::str_detect(V2, Para_String) == TRUE ~ V2,
+                                      stringr::str_detect(V3, Para_String) == TRUE ~ V3,
+                                      TRUE ~ "NA"),
               Team = dplyr::case_when(
-                stringr::str_detect(V3, Time_Score_Specials_String) == TRUE ~ V2,
-                stringr::str_detect(V3, Time_Score_Specials_String) == FALSE ~ V3,
+                stringr::str_detect(V3, Time_Score_Specials_String) == TRUE &
+                  stringr::str_detect(V2, Para_String) == FALSE  ~ V2,
+                stringr::str_detect(V3, Time_Score_Specials_String) == FALSE &
+                  stringr::str_detect(V3, Para_String) == FALSE ~ V3,
                 TRUE ~ "NA"
               ),
               Prelims_Time = dplyr::case_when(
@@ -457,6 +545,7 @@ Swim_Parse <-
               Place,
               Name,
               Age,
+              Para,
               Team,
               Prelims_Time,
               Finals_Time,
@@ -473,7 +562,7 @@ Swim_Parse <-
         suppressWarnings(
           df_4 <- data_length_4 %>%
             list_transform() %>%
-            filter(stringr::str_detect(V1, "\\.") == FALSE) %>% # occasionally olde results with DQs in the splits will end up here - this removes them
+            filter(stringr::str_detect(V1, "\\.") == FALSE) %>% # occasionally old results with DQs in the splits will end up here - this removes them
             dplyr::mutate(
               Place = dplyr::case_when(stringr::str_detect(V1, "\\d") == TRUE ~ V1,
                                        TRUE ~ "10000"),
@@ -575,7 +664,8 @@ Swim_Parse <-
       #### Rejoin dataframes from each number of variables ####
       Min_Row_Numb <- min(events$Event_Row_Min)
       suppressWarnings(
-        data <- dplyr::bind_rows(df_8, df_7) %>%
+        data <- dplyr::bind_rows(df_9, df_8) %>%
+          dplyr::bind_rows(df_7) %>%
           dplyr::bind_rows(df_6) %>%
           dplyr::bind_rows(df_5) %>%
           dplyr::bind_rows(df_4) %>%
@@ -593,8 +683,8 @@ Swim_Parse <-
             Exhibition = dplyr::case_when(stringr::str_detect(Finals_Time, "x|X") == TRUE ~ 1,
                                           TRUE ~ 0),
             ###
-            Finals_Time = stringr::str_extract(Finals_Time, Time_Score_Specials_String),
-            Prelims_Time = stringr::str_extract(Prelims_Time, Time_Score_Specials_String)
+            Finals_Time = stringr::str_extract(Finals_Time, Time_Score_Specials_String_Extract),
+            Prelims_Time = stringr::str_extract(Prelims_Time, Time_Score_Specials_String_Extract)
           ) %>%
           ### moved up from below for DQ work 8/20
           dplyr::mutate(DQ = dplyr::case_when(Place == 10000 &
@@ -626,8 +716,8 @@ Swim_Parse <-
           # dplyr::filter(Row_Numb >= Min_Row_Numb)
       )
 
-      if("Points" %in% names(data) == FALSE)
-      {data$Points <- NA}
+      if("Points" %in% names(data) == FALSE){
+        data$Points <- NA}
 
       #### add in events based on row number ranges ####
       if(min(data$Row_Numb) < min(events$Event_Row_Min)){
@@ -650,6 +740,8 @@ Swim_Parse <-
             Place = round(as.numeric(Place)),
             Event = as.character(Event)
           ) %>%
+          dplyr::mutate(Age = dplyr::case_when(stringr::str_detect(Age, "\\d{1,3}\\-\\d{2}") == TRUE ~ age_format(Age),
+                                               TRUE ~ Age)) %>%
           dplyr::mutate(
             Place = dplyr::case_when(is.na(Place) == TRUE &
                                        DQ == 0 ~ dplyr::lag(Place) + 1,
@@ -693,11 +785,11 @@ Swim_Parse <-
           data <- data %>%
             dplyr::left_join(splits_df, by = c("Row_Numb" = "Row_Numb_Adjusted"))
 
-          ### remove empty columns (all values are NA) ###
-          data <- Filter(function(x)
-            !all(is.na(x)), data)
-
       }
+
+      ### remove empty columns (all values are NA) ###
+      data <- Filter(function(x)
+        !all(is.na(x)), data)
 
       ##### remove duplicated results ####
       # data <- data %>%
@@ -713,7 +805,6 @@ Swim_Parse <-
       data$Row_Numb <- NULL
 
       # message("Beginning with SwimmeR v0.6.0 the Grade and School output columns are renamed Age and Team respectively.  Please adjust your work flows as needed.")
-
 
       return(data)
 
