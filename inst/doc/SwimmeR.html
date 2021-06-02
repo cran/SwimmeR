@@ -26,7 +26,14 @@
     </style>
 
 
-<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  code {
+    white-space: pre;
+  }
+  .sourceCode {
+    overflow: visible;
+  }
+</style>
 <style type="text/css" data-origin="pandoc">
 pre > code.sourceCode { white-space: pre; position: relative; }
 pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
@@ -148,16 +155,16 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>TX_FL_IN_text <span class="ot">&lt;-</span> <span class="fu">read_results</span>(<span class="at">file =</span> TX_FL_IN_path)</span></code></pre></div>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TX_FL_IN_text[<span class="dv">294</span><span class="sc">:</span><span class="dv">303</span>]</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;\nEvent 7 Women 100 Yard Breaststroke&quot;                                                                                                   </span></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2] &quot;\n                         58.79 A&quot;                                                                                                      </span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3] &quot;\n                       1:01.84 B&quot;                                                                                                      </span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4] &quot;\n        Name                                  Age School                               Seed Time       Finals Time              Points&quot;</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5] &quot;\n    1 Lilly King                                21 Indiana University                         NT               59.46   B&quot;              </span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6] &quot;\n               r:+0.70 27.62         59.46 (31.84)&quot;                                                                                    </span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;\n    2 Olivia Anderson                           21 Texas, University of                       NT            1:01.88&quot;                   </span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8] &quot;\n               r:+0.74 29.13       1:01.88 (32.75)&quot;                                                                                    </span></span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9] &quot;\n    3 Noelle Peplowski                          18 Indiana University                         NT            1:02.02&quot;                   </span></span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10] &quot;\n               r:+0.71 29.06       1:02.02 (32.96)&quot;</span></span></code></pre></div>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [1] &quot;\nEvent 7 Women 100 Yard Breaststroke&quot;                                                                                             </span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [2] &quot;\n                         58.79 A&quot;                                                                                                </span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [3] &quot;\n                       1:01.84 B&quot;                                                                                                </span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [4] &quot;\n       Name                                   Age School                         Seed Time         Finals Time            Points&quot;</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [5] &quot;\n    1 Lilly King                               21 Indiana University                   NT                59.46    B&quot;             </span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [6] &quot;\n               r:+0.70 27.62          59.46 (31.84)&quot;                                                                             </span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [7] &quot;\n    2 Olivia Anderson                          21 Texas, University of                 NT               1:01.88&quot;                 </span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [8] &quot;\n               r:+0.74 29.13        1:01.88 (32.75)&quot;                                                                             </span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt;  [9] &quot;\n    3 Noelle Peplowski                         18 Indiana University                   NT               1:02.02&quot;                 </span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [10] &quot;\n               r:+0.71 29.06        1:02.02 (32.96)&quot;</span></span></code></pre></div>
 <p>Here we see a subsection of the meet - the top three finishers in the Women’s 100 Yard Breaststroke featuring Olympic gold medalist, and the <code>SwimmeR</code> package’s favorite swimmer, Lilly King.</p>
 <p>The next step is to convert this data to a dataframe using <code>swim_parse</code>. Because <code>swim_parse</code> works on text strings it is very sensitive to typos and/or nonstandard naming conventions. “Texas-Florida-Indiana.pdf” has two examples of these potential problems.</p>
 <p>The first is that <code>Indiana University</code> is sometimes entered as <code>Indiana  University</code>, with two spaces between <code>Indiana</code> and <code>University</code>. This is a problem in versions of <code>Swimmer</code> &lt; 0.7.0 because <code>swim_parse</code> will interpret two spaces as a column separator, and will not properly capture <code>Indiana  University</code> (two spaces) as a team name. In versions of <code>Swimmer</code> &gt;= 0.7.0 the extra space won’t cause a problem at all.</p>
