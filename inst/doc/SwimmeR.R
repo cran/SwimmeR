@@ -52,6 +52,39 @@ TX_FL_IN_df_splits <-
 
 TX_FL_IN_df_splits[100:102,]
 
+## ----splits mixed, message = FALSE--------------------------------------------
+df <- data.frame(
+  Place = 1,
+  Name = c("Lenore Lap", "Casey Cumulative"),
+  Team = rep("KVAC", 2),
+  Event = rep("Womens 200 Freestyle", 2),
+  Finals_Time = rep("1:58.00", 2),
+  Split_50 = rep("28.00", 2),
+  Split_100 = c("31.00", "59.00"),
+  Split_150 = c("30.00", "1:29.00"),
+  Split_200 = c("29.00", "1:58.00")
+)
+
+df
+
+## ----cumulative to lap, message = FALSE---------------------------------------
+df %>% 
+  filter(Name == "Casey Cumulative") %>% 
+  splits_to_lap()
+
+## ----cumulative to lap mixed, message = FALSE---------------------------------
+df %>% 
+  splits_to_lap(threshold = 35)
+
+## ----lap to cumulative, message = FALSE---------------------------------------
+df %>% 
+  filter(Name == "Lenore Lap") %>% 
+  splits_to_cumulative()
+
+## ----lap to lap cumulative, message = FALSE-----------------------------------
+df %>% 
+  splits_to_cumulative(threshold = 20)
+
 ## ----relay swimmers output, message = FALSE-----------------------------------
 TX_FL_IN_df_relay_swimmers <-
   swim_parse(
