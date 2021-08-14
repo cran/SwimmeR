@@ -16,10 +16,11 @@
 
 ### Latest Development Version from Github
 
-Version 0.10.6
+Version 0.12.0
 
-* Developing support for parsing Omega files from US Olympic Trials, 2021
-* Functions `splits_to_lap` and `splits_to_cumulative` for converting splits between lap and cumulative formats
+* ISL season 2 bug fixes
+* Further improvements for handling Tokyo Olympics results
+* Reaction times now included for Hytek results (individual events only)
 
 `devtools::install_github("gpilgrim2670/SwimmeR", build_vignettes = TRUE)`
 
@@ -29,7 +30,7 @@ Version 0.10.6
 
 ## Importing Results
 
-`SwimmeR` reads swimming results into R and outputs tidy dataframes of the results.  `SwimmeR` uses `read_results` to read in either a PDF or HTML file (like a url) and the `swim_parse` or `swim_parse_ISL` function to convert the read file to a tidy data frame.  Reading .hy3 files is also now possible with `swim_parse`, although .hy3 functionality is still under development and quite buggy.  As of version 0.7.0 `SwimmeR` can also read S.A.M.M.S. style results.
+`SwimmeR` reads swimming results into R and outputs tidy data frames of the results.  `SwimmeR` uses `read_results` to read in either a PDF or HTML file (like a url) and the `swim_parse` or `swim_parse_ISL` function to convert the read file to a tidy data frame.  Reading .hy3 files is also now possible with `swim_parse`, although .hy3 functionality is still under development and quite buggy.  As of version 0.7.0 `SwimmeR` can also read S.A.M.M.S. style results.
 
 `read_results` has two arguments, `file`, which is the file path to read in, and `node`, required only for HTML files, this is a CSS node where the results reside.  `node` defaults to `"pre"`, which has been correct in every instance tested thus far.
 
@@ -184,6 +185,6 @@ course_convert(time = swim$time, course = swim$course, course_to = swim$course_t
 
 I do a lot of demos on how to use `SwimmeR` at my blog [Swimming + Data Science](https://pilgrim.netlify.app/).
 
-`SwimmeR` also has a vignette.  Call `vignette("SwimmeR")`.  If you download from github don't forget to set `build_vignettes = TRUE`.
+`SwimmeR` also has a vignette.  Call `vignette("SwimmeR")`.  If you download from Github don't forget to set `build_vignettes = TRUE`.
 
-If you find bug, please provide a minimal reproducible example at [github](https://github.com/gpilgrim2670/SwimmeR).
+If you find bug, please provide a minimal reproducible example at [Github](https://github.com/gpilgrim2670/SwimmeR).

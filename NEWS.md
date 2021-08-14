@@ -1,4 +1,29 @@
-# SwimmeR 0.11.0 - July 9th 2021
+# SwimmeR 0.12.0 - August 13th 2021
+* CRAN release
+* contains all dev version updates since SwimmeR 0.11.0
+
+# SwimmeR 0.11.7 - August 11th 2021
+* Tokyo bug fixes re: Mixed and 4x200 relays
+
+# SwimmeR 0.11.6 - August 11th 2021
+* ISL season 2 bug fixes
+
+# SwimmeR 0.11.5 - August 5th 2021
+* Reaction times for Hytek results in individual events
+
+# SwimmeR 0.11.4 - August 3rd 2021
+* Heat handling for Tokyo Olympics phase reports
+
+# SwimmeR 0.11.3 - July 26th 2021
+* Updates for Tokyo Olympics
+
+# SwimmeR 0.11.2 - July 20th 2021
+* Bug fixes and testing updates for places as "1)"
+
+# SwimmeR 0.11.1 - July 14th 2021
+* Vignette changes to backdoor in NYS results
+
+# SwimmeR 0.11.0 - July 9th 2021, submitted July 14th
 * CRAN release
 * contains all dev version updates since SwimmeR 0.10.0
 

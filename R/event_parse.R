@@ -25,14 +25,22 @@
 event_parse <- function(text) {
   # text <- as_lines_list_2
 
+  omega_headers_string <- "Records Set"
+
+  olympics_string <- "Men.* 4?\\s?x?\\s?\\d{1,}m.*|Women.* 4?\\s?x?\\s?\\d{1,}m.*|Mixed.* 4?\\s?x?\\s?\\d{1,}m.*"
+
   event_string <-
     "Event\\:?\\s?#?\\s+\\d{1,}|EVENT\\:?\\s?#?\\s+\\d{1,}|Women.* Yard|Women.* Meter|Women.* Metre|Girls.* Yard|Girls.* Meter|Girls.* Metre|Men.* Yard|Men.* Meter|Men.* Metre|Boys.* Yard|Boys.* Meter|Boys.* Metre|Mixed.* Yard|Mixed.* Meter|Mixed.* Metre"
+
+  event_string <- paste(event_string, olympics_string, omega_headers_string, sep = "|")
 
   events <- text %>%
     .[purrr::map_lgl(.,
                      stringr::str_detect,
                      event_string)] %>% # new 12/15 for older NCAA results
-    .[purrr::map_lgl(., ~ !any(stringr::str_detect(., "\\.\\.\\.")))] # removes subheaders like in OT results "Semi-Finals ... (women...)" etc.
+    .[purrr::map_lgl(., ~ !any(stringr::str_detect(., "\\.\\.\\.")))] %>%  # removes subheaders like in OT results "Semi-Finals ... (women...)" etc.
+    .[purrr::map_lgl(., stringr::str_detect, "\\d{2}\\.\\d{2}", negate = TRUE)] %>%
+    .[purrr::map_lgl(., stringr::str_detect, "\\d{2} [:upper:]{3} \\d{4} GOLD", negate = TRUE)]
 
   if (length(events) > 0) {
     #if event names are recognized clean them up and determine row ranges
@@ -47,8 +55,9 @@ event_parse <- function(text) {
       stringr::str_replace_all("\\\n", "") %>%
       stringr::str_replace_all("\\(", "") %>%
       stringr::str_replace_all("\\)", "") %>%
-      str_replace_all("\\s{2,}", " ") %>%
-      str_replace(" (\\d{1,})$", "   \\1") %>% # new 12/15 for older NCAA results
+      stringr::str_replace_all("\\s{2,}", " ") %>%
+      stringr::str_replace(" (\\d{1,})$", "   \\1") %>% # new 12/15 for older NCAA results
+      stringr::str_remove("\\sCONT\\s?.*") %>%
       # stringr::str_replace(".*(?=(Wom|Men|Boy|Girl))", "") %>% # new 10/16
       trimws()
 
@@ -56,7 +65,7 @@ event_parse <- function(text) {
       unlist(purrr::map(events, stringr::str_split, "\\s{2,}"),
              recursive = FALSE)
 
-    # dataframe for events with names and row number ranges
+    # data frame for events with names and row number ranges
     events <- events %>%
       list_transform() %>%
       dplyr::mutate(
@@ -67,7 +76,7 @@ event_parse <- function(text) {
         V2 = NULL
       )
   } else{
-    # if no event names are recognized deploy dummy dataframe with event name "unknown" and post warning
+    # if no event names are recognized deploy dummy data frame with event name "unknown" and post warning
     events <- data.frame(
       Event = "Unknown",
       Event_Row_Min = 1,

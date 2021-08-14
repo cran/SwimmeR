@@ -27,9 +27,13 @@ TX_FL_IN_df <-
 ## ----Swim Parse output, message = FALSE---------------------------------------
 TX_FL_IN_df[102:104,]
 
-## ----read_results html, message = FALSE---------------------------------------
-NYS_link <- "http://www.nyhsswim.com/Results/Girls/2003/NYS/Single.htm"
-NYS_text <- read_results(file = NYS_link, node = "pre")
+## ----read_results html, message = FALSE, eval=FALSE---------------------------
+#  NYS_link <- "http://www.nyhsswim.com/Results/Girls/2003/NYS/Single.htm"
+#  NYS_text <- read_results(file = NYS_link, node = "pre")
+
+## ----read_results html actual, message = FALSE, echo = FALSE------------------
+NYS_text_path <- system.file("extdata", "NYS_text.RDS", package = "SwimmeR")
+NYS_text <- readRDS(NYS_text_path)
 
 ## ----read_results html output, message = FALSE--------------------------------
 NYS_text[587:598]
