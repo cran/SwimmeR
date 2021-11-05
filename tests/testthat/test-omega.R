@@ -319,249 +319,85 @@ test_that("Tokyo 2020 Men 400IM Heat 1", {
   skip_on_cran()
 
   file <-
-    "https://olympics.com/tokyo-2020/olympic-games/resOG2020-/pdf/OG2020-/SWM/OG2020-_SWM_C73A1_SWMM400MIM------------FNL-000100--.pdf"
+    "https://github.com/gpilgrim2670/Pilgrim_Data/raw/master/Tokyo2020/SWMM400MIM_HEAT.pdf"
 
   df_test <- file %>%
     read_results() %>%
     swim_parse(splits = TRUE,
-               relay_swimmers = TRUE)
+               relay_swimmers = TRUE) %>%
+    filter(Heat == "Heat_1")
 
   df_standard <-
-    structure(
-      list(
-        Place = c("1", "2", "3", "4", "4", "6", "7", "8"),
-        Heat = rep("Final", 8),
-        Lane = c("3", "7", "4", "6", "8", "1", "5", "2"),
-        Name = c(
-          "KALISZ Chase",
-          "LITHERLAND Jay",
-          "SMITH Brendon",
-          "VERRASZTO David",
-          "LITCHFIELD Max",
-          "MARCHAND Leon",
-          "CLAREBURT Lewis",
-          "RAZZETTI Alberto"
-        ),
-        Team = c("USA",
-                 "USA", "AUS", "HUN", "GBR", "FRA", "NZL", "ITA"),
-        Reaction_Time = c("0.73",
-                          "0.71", "0.66", "0.79", "0.61", "0.67", "0.68", "0.68"),
-        Finals_Time = c(
-          "4:09.42",
-          "4:10.28",
-          "4:10.38",
-          "4:10.59",
-          "4:10.59",
-          "4:11.16",
-          "4:11.22",
-          "4:11.32"
-        ),
-        DQ = c("0", "0", "0", "0", "0", "0", "0", "0"),
-        Exhibition = c("0",
-                       "0", "0", "0", "0", "0", "0", "0"),
-        Event = c(
-          "Men's 400m Individual Medley",
-          "Men's 400m Individual Medley",
-          "Men's 400m Individual Medley",
-          "Men's 400m Individual Medley",
-          "Men's 400m Individual Medley",
-          "Men's 400m Individual Medley",
-          "Men's 400m Individual Medley",
-          "Men's 400m Individual Medley"
-        ),
-        Split_50 = c(
-          "26.27",
-          "26.38",
-          "26.44",
-          "27.09",
-          "27.02",
-          "25.73",
-          "26.40",
-          "26.09"
-        ),
-        Split_100 = c(
-          "29.96",
-          "30.27",
-          "30.68",
-          "30.51",
-          "30.42",
-          "30.41",
-          "30.46",
-          "30.24"
-        ),
-        Split_150 = c(
-          "32.36",
-          "32.76",
-          "32.11",
-          "32.06",
-          "32.50",
-          "33.68",
-          "31.87",
-          "34.06"
-        ),
-        Split_200 = c(
-          "31.74",
-          "31.60",
-          "31.35",
-          "31.76",
-          "31.55",
-          "32.99",
-          "31.26",
-          "32.96"
-        ),
-        Split_250 = c(
-          "34.02",
-          "36.04",
-          "36.69",
-          "35.27",
-          "35.83",
-          "34.51",
-          "36.12",
-          "34.78"
-        ),
-        Split_300 = c(
-          "35.12",
-          "36.51",
-          "36.79",
-          "35.45",
-          "35.94",
-          "34.94",
-          "35.83",
-          "35.66"
-        ),
-        Split_350 = c(
-          "30.30",
-          "28.76",
-          "28.90",
-          "30.02",
-          "29.19",
-          "30.24",
-          "29.65",
-          "29.52"
-        ),
-        Split_400 = c(
-          "29.65",
-          "27.96",
-          "27.42",
-          "28.43",
-          "28.14",
-          "28.66",
-          "29.63",
-          "28.01"
-        )
-      ),
-      row.names = c(NA,-8L),
-      class = "data.frame"
-    )
+    structure(list(Place = c("1", "2", "3", "4", "5"), Heat = c("Heat_1",
+                                                                "Heat_1", "Heat_1", "Heat_1", "Heat_1"), Lane = c("5", "4", "3",
+                                                                                                                  "6", "2"), Name = c("LOPES Jose", "PERIBONIO AVILA Tomas", "POLONSKY Ron",
+                                                                                                                                      "MEIER Christoph", "VEGA TORRES Luis Emigdio"), Team = c("POR",
+                                                                                                                                                                                               "ECU", "ISR", "LIE", "CUB"), Reaction_Time = c("0.66", "0.63",
+                                                                                                                                                                                                                                              "0.71", "0.68", "0.69"), Finals_Time = c("4:16.52", "4:18.73",
+                                                                                                                                                                                                                                                                                       "4:21.50", "4:25.17", "4:27.65"), DQ = c("0", "0", "0", "0",
+                                                                                                                                                                                                                                                                                                                                "0"), Exhibition = c("0", "0", "0", "0", "0"), Event = c("Men's 400m Individual Medley",
+                                                                                                                                                                                                                                                                                                                                                                                         "Men's 400m Individual Medley", "Men's 400m Individual Medley",
+                                                                                                                                                                                                                                                                                                                                                                                         "Men's 400m Individual Medley", "Men's 400m Individual Medley"
+                                                                                                                                                                                                                                                                                                                                ), Split_50 = c("27.40", "27.11", "27.14", "26.52", "27.65"),
+                   Split_100 = c("30.93", "31.26", "31.90", "30.88", "31.80"
+                   ), Split_150 = c("32.52", "33.26", "33.65", "36.28", "34.85"
+                   ), Split_200 = c("32.48", "33.00", "33.63", "35.65", "34.26"
+                   ), Split_250 = c("37.07", "35.87", "35.44", "36.22", "37.34"
+                   ), Split_300 = c("36.66", "36.88", "36.86", "36.84", "38.01"
+                   ), Split_350 = c("30.43", "30.75", "31.46", "31.68", "32.24"
+                   ), Split_400 = c("29.03", "30.60", "31.42", "31.10", "31.50"
+                   )), row.names = c(NA, -5L), class = "data.frame")
 
   expect_equivalent(df_standard,
                     df_test)
 
 })
 
-test_that("Tokyo 2020 Women 4 x 100m Free Heat 1", {
+test_that("Tokyo 2020 Women 4 x 100m Free Heat 1, checked", {
   skip_on_cran()
 
   file <-
-    "https://olympics.com/tokyo-2020/olympic-games/resOG2020-/pdf/OG2020-/SWM/OG2020-_SWM_C73B1_SWMW4X100MFR----------HEAT000100--.pdf"
+    "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Tokyo2020/SWMW4X100MFR_HEAT.pdf"
 
   df_test <- file %>%
     read_results() %>%
     swim_parse(splits = TRUE,
-               relay_swimmers = TRUE)
+               relay_swimmers = TRUE) %>%
+    filter(Heat == "Heat_1")
+
 
   df_standard <-
-    structure(
-      list(
-        Place = c("1", "2", "3", "4", "5", "6", "7"),
-        Lane = c("5", "4", "2", "6", "3", "7", "1"),
-        Team = c(
-          "GBR - Great Britain",
-          "USA - United States of America",
-          "DEN - Denmark",
-          "SWE - Sweden",
-          "FRA - France",
-          "BRA - Brazil",
-          "HKG - Hong Kong, China"
-        ),
-        Finals_Time = c(
-          "3:34.03",
-          "3:34.80",
-          "3:35.56",
-          "3:35.93",
-          "3:36.61",
-          "3:39.19",
-          "3:43.52"
-        ),
-        DQ = c("0", "0", "0", "0",
-               "0", "0", "0"),
-        Exhibition = c("0", "0", "0", "0", "0", "0",
-                       "0"),
-        Event = c(
-          "Women's 4 x 100m Freestyle Relay",
-          "Women's 4 x 100m Freestyle Relay",
-          "Women's 4 x 100m Freestyle Relay",
-          "Women's 4 x 100m Freestyle Relay",
-          "Women's 4 x 100m Freestyle Relay",
-          "Women's 4 x 100m Freestyle Relay",
-          "Women's 4 x 100m Freestyle Relay"
-        ),
-        Relay_Swimmer_1 = c(
-          "HOPE Lucy",
-          "SMOLIGA Olivia",
-          "BLUME Pernille",
-          "SJOESTROEM Sarah",
-          "GASTALDELLO Beryl",
-          "OLIVEIRA Larissa",
-          "TAM Hoi Lam"
-        ),
-        Relay_Swimmer_2 = c(
-          "HOPKIN Anna",
-          "de LOOF Catie",
-          "BRO Signe",
-          "COLEMAN Michelle",
-          "BONNET Charlotte",
-          "VIEIRA Ana Carolina",
-          "CHENG Camille Lily Mei"
-        ),
-        Relay_Swimmer_3 = c(
-          "WOOD Abbie",
-          "SCHMITT Allison",
-          "JENSEN Julie Kepp",
-          "HANSSON Louise",
-          "FABRE Margaux",
-          "MEDEIROS Etiene",
-          "AU Hoi Shun Stephanie"
-        ),
-        Relay_Swimmer_4 = c(
-          "ANDERSON Freya",
-          "HINDS Natalie",
-          "OTTESEN Jeanette",
-          "JUNEVIK Sara",
-          "MARTIN Anouchka",
-          "BALDUCCINI Stephanie",
-          "HO Nam Wai Tinky"
-        ),
-        Split_50 = c("26.28", "25.96", "25.33",
-                     "25.47", "25.97", "26.23", "26.50"),
-        Split_100 = c("54.37",
-                      "54.06", "53.15", "52.95", "54.28", "54.79", "55.58"),
-        Split_150 = c("24.87",
-                      "25.02", "25.50", "24.91", "25.35", "26.07", "26.05"),
-        Split_200 = c("52.65",
-                      "53.42", "53.19", "53.44", "53.05", "54.92", "54.61"),
-        Split_250 = c("25.53",
-                      "25.85", "25.56", "25.29", "26.09", "25.95", "26.96"),
-        Split_300 = c("53.55",
-                      "54.04", "54.72", "53.68", "54.83", "55.42", "56.96"),
-        Split_350 = c("25.76",
-                      "25.30", "25.46", "25.87", "25.75", "25.61", "27.43"),
-        Split_400 = c("53.46",
-                      "53.28", "54.50", "55.86", "54.45", "54.06", "56.37")
-      ),
-      row.names = c(NA, -7L),
-      class = "data.frame"
-    )
+    structure(list(Place = c("1", "2", "3", "4", "5", "6", "7"),
+                   Heat = c("Heat_1", "Heat_1", "Heat_1", "Heat_1", "Heat_1",
+                            "Heat_1", "Heat_1"), Lane = c("5", "4", "2", "6", "3", "7",
+                                                          "1"), Team = c("GBR - Great Britain", "USA - United States of America",
+                                                                         "DEN - Denmark", "SWE - Sweden", "FRA - France", "BRA - Brazil",
+                                                                         "HKG - Hong Kong, China"), Finals_Time = c("3:34.03", "3:34.80",
+                                                                                                                    "3:35.56", "3:35.93", "3:36.61", "3:39.19", "3:43.52"), DQ = c("0",
+                                                                                                                                                                                   "0", "0", "0", "0", "0", "0"), Exhibition = c("0", "0", "0",
+                                                                                                                                                                                                                                 "0", "0", "0", "0"), Event = c("Women's 4 x 100m Freestyle Relay",
+                                                                                                                                                                                                                                                                "Women's 4 x 100m Freestyle Relay", "Women's 4 x 100m Freestyle Relay",
+                                                                                                                                                                                                                                                                "Women's 4 x 100m Freestyle Relay", "Women's 4 x 100m Freestyle Relay",
+                                                                                                                                                                                                                                                                "Women's 4 x 100m Freestyle Relay", "Women's 4 x 100m Freestyle Relay"
+                                                                                                                                                                                                                                 ), Relay_Swimmer_1 = c("HOPE Lucy", "SMOLIGA Olivia", "BLUME Pernille",
+                                                                                                                                                                                                                                                        "SJOESTROEM Sarah", "GASTALDELLO Beryl", "OLIVEIRA Larissa",
+                                                                                                                                                                                                                                                        "TAM Hoi Lam"), Relay_Swimmer_2 = c("HOPKIN Anna", "de LOOF Catie",
+                                                                                                                                                                                                                                                                                            "BRO Signe", "COLEMAN Michelle", "BONNET Charlotte", "VIEIRA Ana Carolina",
+                                                                                                                                                                                                                                                                                            "CHENG Camille Lily Mei"), Relay_Swimmer_3 = c("WOOD Abbie",
+                                                                                                                                                                                                                                                                                                                                           "SCHMITT Allison", "JENSEN Julie Kepp", "HANSSON Louise",
+                                                                                                                                                                                                                                                                                                                                           "FABRE Margaux", "MEDEIROS Etiene", "AU Hoi Shun Stephanie"
+                                                                                                                                                                                                                                                                                            ), Relay_Swimmer_4 = c("ANDERSON Freya", "HINDS Natalie",
+                                                                                                                                                                                                                                                                                                                   "OTTESEN Jeanette", "JUNEVIK Sara", "MARTIN Anouchka", "BALDUCCINI Stephanie",
+                                                                                                                                                                                                                                                                                                                   "HO Nam Wai Tinky"), Split_50 = c("26.28", "25.96", "25.33",
+                                                                                                                                                                                                                                                                                                                                                     "25.47", "25.97", "26.23", "26.50"), Split_100 = c("54.37",
+                                                                                                                                                                                                                                                                                                                                                                                                        "54.06", "53.15", "52.95", "54.28", "54.79", "55.58"), Split_150 = c("24.87",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "25.02", "25.50", "24.91", "25.35", "26.07", "26.05"), Split_200 = c("52.65",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  "53.42", "53.19", "53.44", "53.05", "54.92", "54.61"), Split_250 = c("25.53",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       "25.85", "25.56", "25.29", "26.09", "25.95", "26.96"), Split_300 = c("53.55",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            "54.04", "54.72", "53.68", "54.83", "55.42", "56.96"), Split_350 = c("25.76",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 "25.30", "25.46", "25.87", "25.75", "25.61", "27.43"), Split_400 = c("53.46",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "53.28", "54.50", "55.86", "54.45", "54.06", "56.37")), row.names = c(NA,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            -7L), class = "data.frame")
 
   expect_equivalent(df_standard,
                     df_test)
@@ -1700,7 +1536,7 @@ test_that("Tokyo 2020 Mixed 4x100MR Finals, relay swimmer gender", {
           "KAMENEVA Mariia",
           "MUREZ Andrea"
         ),
-        Relay_Swimmer_5_Gender = c("F",
+        Relay_Swimmer_4_Gender = c("F",
                                    "F", "F", "F", "M", "F", "F", "F"),
         Split_50 = c(
           "28.35",
@@ -1890,6 +1726,7 @@ test_that("Tokyo 2020 Men 200FR Finals, need to capture swims", {
       row.names = c(NA, -8L),
       class = "data.frame"
     )
+
   expect_equivalent(df_standard,
                     df_test)
 
@@ -2151,6 +1988,7 @@ test_that("Tokyo 2020 Men 4x200FR Finals, need to not capture splits as swims",
                 row.names = c(NA, -8L),
                 class = "data.frame"
               )
+
             expect_equivalent(df_standard,
                               df_test)
 
@@ -2762,5 +2600,304 @@ test_that("Tokyo Men 50 Free Final, need to not pull out relay swimmers",
 
           })
 
+
+#### Para 2020 ####
+test_that("Tokyo Para SM6 200 IM Final, swimmer with long name distorts pdf format",
+          {
+            skip_on_cran()
+
+            file <-
+              "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/SwimmeR%20Test%20Files/PG2020_SWMM200MIM_FNL.pdf"
+
+            df_test <- file %>%
+              read_results() %>%
+              swim_parse(splits = TRUE,
+                         relay_swimmers = TRUE)
+
+            df_standard <-
+              structure(list(Place = c("1", "2", "3", "4", "5", "6", "7", "8"
+              ), Heat = c("Final", "Final", "Final", "Final", "Final", "Final",
+                          "Final", "Final"), Lane = c("4", "5", "3", "2", "8", "7", NA,
+                                                      "1"), Name = c("CRISPIN CORZO Nelson", "GRANICHKA Andrei", "JIA Hongguang",
+                                                                     "YANG Hong", "WANG Jingang", "GLOCK Talisson Henrique", "GUTIERREZ BERMUDEZ Juan Jose",
+                                                                     "SHATTUCK Zach"), Para = c("SM6", "SM6", "SM6", "SM6", "SM6",
+                                                                                                "SM6", NA, "SM6"), Team = c("COL", "RPC", "CHN", "CHN", "CHN",
+                                                                                                                            "BRA", "MEX", "USA"), Reaction_Time = c("0.66", "0.79", "0.92",
+                                                                                                                                                                    "0.76", "0.90", "0.90", "0.58", "0.52"), Finals_Time = c("2:38.12",
+                                                                                                                                                                                                                             "2:40.92", "2:41.29", "2:41.34", "2:43.74", "2:45.17", "2:48.79",
+                                                                                                                                                                                                                             "2:52.52"), DQ = c("0", "0", "0", "0", "0", "0", "0", "0"), Exhibition = c("0",
+                                                                                                                                                                                                                                                                                                        "0", "0", "0", "0", "0", "0", "0"), Event = c("Men's 200m Individual Medley - SM6",
+                                                                                                                                                                                                                                                                                                                                                      "Men's 200m Individual Medley - SM6", "Men's 200m Individual Medley - SM6",
+                                                                                                                                                                                                                                                                                                                                                      "Men's 200m Individual Medley - SM6", "Men's 200m Individual Medley - SM6",
+                                                                                                                                                                                                                                                                                                                                                      "Men's 200m Individual Medley - SM6", "Men's 200m Individual Medley - SM6",
+                                                                                                                                                                                                                                                                                                                                                      "Men's 200m Individual Medley - SM6"), Split_50 = c("31.62",
+                                                                                                                                                                                                                                                                                                                                                                                                          "34.54", "33.19", "35.40", "31.81", "34.43", "34.73", "35.15"
+                                                                                                                                                                                                                                                                                                                                                      ), Split_100 = c("42.56", "43.08", "39.76", "40.97", "41.59",
+                                                                                                                                                                                                                                                                                                                                                                       "43.50", "45.60", "47.50"), Split_150 = c("45.97", "46.84", "49.52",
+                                                                                                                                                                                                                                                                                                                                                                                                                 "45.46", "49.97", "51.71", "46.90", "47.10"), Split_200 = c("37.97",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "36.46", "38.82", "39.51", "40.37", "35.53", "41.56", "42.77"
+                                                                                                                                                                                                                                                                                                                                                                                                                 )), row.names = c(NA, -8L), class = "data.frame")
+
+            expect_equivalent(df_standard,
+                              df_test)
+
+          })
+
+test_that("Tokyo Para S11 50 Free Heats, DNS",
+          {
+            skip_on_cran()
+
+            file <-
+              "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/SwimmeR%20Test%20Files/PG2020_SWMM50MFR_HEAT.pdf"
+
+            df_test <- file %>%
+              read_results() %>%
+              swim_parse(splits = TRUE,
+                         relay_swimmers = TRUE)
+
+            df_standard <-
+              structure(list(Place = c("1", "2", "3", "4", "5", "6", "7", "1",
+                                       "2", "3", "4", "5", "6", "7", NA), Heat = c("Heat_1", "Heat_1",
+                                                                                   "Heat_1", "Heat_1", "Heat_1", "Heat_1", "Heat_1", "Heat_2", "Heat_2",
+                                                                                   "Heat_2", "Heat_2", "Heat_2", "Heat_2", "Heat_2", "Heat_2"),
+                             Lane = c("4", "6", "5", "3", "7", "2", "1", "4", "5", "3",
+                                      "6", "7", "8", "1", "2"), Name = c("BELARMINO PEREIRA Wendell",
+                                                                         "RHEINE CORREA de SOUZA Matheus", "YANG Bozun", "SERBIN Mykhailo",
+                                                                         "MENESES Marco", "SMYRNOV Viktor", "GUNNARSSON Mar", "MATAKAS Edgaras",
+                                                                         "HUA Dongdong", "MAKOWSKI Wojciech", "CABRAJA Matthew", "GARIPOV Ilnur",
+                                                                         "DRAG Przemyslaw", "ARTIUKHOV Oleksandr", "ZUDZILAU Hryhory"
+                                      ), Para = c("S11", "S11", "S11", "S11", "S11", "S11", "S11",
+                                                  "S11", "S11", "S11", "S11", "S11", "S11", "S11", "S11"),
+                             Team = c("BRA", "BRA", "CHN", "UKR", "POR", "UKR", "ISL",
+                                      "LTU", "CHN", "POL", "CAN", "RPC", "POL", "UKR", "BLR"),
+                             Reaction_Time = c("0.69", "0.69", "0.76", "0.75", "0.87",
+                                               "0.84", "0.75", "0.61", "0.75", "0.78", "0.70", "0.68", "0.74",
+                                               "0.74", NA), Finals_Time = c("26.47", "27.17", "27.19", "27.44",
+                                                                            "28.07", "28.31", "29.30", "26.16", "26.55", "27.92", "28.13",
+                                                                            "28.39", "29.02", "30.29", NA), DQ = c("0", "0", "0", "0",
+                                                                                                                   "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "1"), Exhibition = c("0",
+                                                                                                                                                                                          "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0", "0",
+                                                                                                                                                                                          "0", "0"), Event = c("Men's 50m Freestyle - S11", "Men's 50m Freestyle - S11",
+                                                                                                                                                                                                               "Men's 50m Freestyle - S11", "Men's 50m Freestyle - S11",
+                                                                                                                                                                                                               "Men's 50m Freestyle - S11", "Men's 50m Freestyle - S11",
+                                                                                                                                                                                                               "Men's 50m Freestyle - S11", "Men's 50m Freestyle - S11",
+                                                                                                                                                                                                               "Men's 50m Freestyle - S11", "Men's 50m Freestyle - S11",
+                                                                                                                                                                                                               "Men's 50m Freestyle - S11", "Men's 50m Freestyle - S11",
+                                                                                                                                                                                                               "Men's 50m Freestyle - S11", "Men's 50m Freestyle - S11",
+                                                                                                                                                                                                               "Men's 50m Freestyle - S11"), Split_50 = c("26.47", "27.17",
+                                                                                                                                                                                                                                                          "27.19", "27.44", "28.07", "28.31", "29.30", "26.16", "26.55",
+                                                                                                                                                                                                                                                          "27.92", "28.13", "28.39", "29.02", "30.29", NA)), row.names = c(NA,
+                                                                                                                                                                                                                                                                                                                           -15L), class = "data.frame")
+            expect_equivalent(df_standard,
+                              df_test)
+
+          })
+
+test_that("Tokyo Para Mixed 4x100 Free Relay 49 Points",
+          {
+            skip_on_cran()
+
+            file <-
+              "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/SwimmeR%20Test%20Files/PG2020_SWMX4X100MFR_FNL.pdf"
+
+            df_test <- file %>%
+              read_results() %>%
+              swim_parse(splits = TRUE,
+                         relay_swimmers = TRUE)
+
+            df_standard <-
+              structure(list(Place = c("1", "2", "3", "4", "5", "6"), Heat = c("Final",
+                                                                               "Final", "Final", "Final", "Final", "Final"), Lane = c("3", "5",
+                                                                                                                                      "4", "6", "2", "7"), Team = c("RPC - RPC", "BRA - Brazil", "UKR - Ukraine",
+                                                                                                                                                                    "ESP - Spain", "JPN - Japan", "CHN - People's Republic of China"
+                                                                                                                                      ), Finals_Time = c("3:53.79", "3:54.95", "3:55.15", "4:03.38",
+                                                                                                                                                         "4:08.66", "4:18.60"), DQ = c("0", "0", "0", "0", "0", "0"),
+                             Exhibition = c("0", "0", "0", "0", "0", "0"), Event = c("Mixed 4x100m Freestyle Relay - 49 Points",
+                                                                                     "Mixed 4x100m Freestyle Relay - 49 Points", "Mixed 4x100m Freestyle Relay - 49 Points",
+                                                                                     "Mixed 4x100m Freestyle Relay - 49 Points", "Mixed 4x100m Freestyle Relay - 49 Points",
+                                                                                     "Mixed 4x100m Freestyle Relay - 49 Points"), Relay_Swimmer_1 = c("GARIPOV Ilnur",
+                                                                                                                                                      "BELARMINO PEREIRA Wendell", "PIDDUBNA Maryna", "CANTERO ELVIRA Jose Ramon",
+                                                                                                                                                      "TOMITA Uchu", "HUA Dongdong"), Relay_Swimmer_1_Gender = c("M",
+                                                                                                                                                                                                                 "M", "F", "M", "M", "M"), Relay_Swimmer_1_Para = c("S11",
+                                                                                                                                                                                                                                                                    "S11", "S11", "S11", "S11", "S11"), Relay_Swimmer_2 = c("KRIVSHINA Anna",
+                                                                                                                                                                                                                                                                                                                            "MATERA Douglas", "VERAKSA Maksym", "DELGADO NADAL Maria",
+                                                                                                                                                                                                                                                                                                                            "SAITO Genki", "LI Guizhi"), Relay_Swimmer_2_Gender = c("F",
+                                                                                                                                                                                                                                                                                                                                                                                    "M", "M", "F", "M", "F"), Relay_Swimmer_2_Para = c("S13",
+                                                                                                                                                                                                                                                                                                                                                                                                                                       "S13", "S12", "S12", "S13", "S11"), Relay_Swimmer_3 = c("PIKALOVA Daria",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "da SILVA SOUSA Lucilene", "STETSENKO Anna", "EDO BELTRAN Ariadna",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "ISHIURA Tomomi", "CAI Liwen"), Relay_Swimmer_3_Gender = c("F",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          "F", "F", "F", "F", "F"), Relay_Swimmer_3_Para = c("S12",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "S12", "S13", "S13", "S11", "S11"), Relay_Swimmer_4 = c("SOTNIKOV Vladimir",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "GOMES SANTIAGO Maria Carolina", "GARASHCHENKO Kyrylo", "SALGUERO OTEIZA Ivan",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "TSUJIUCHI Ayano", "YANG Bozun"), Relay_Swimmer_4_Gender = c("M",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  "F", "M", "M", "F", "M"), Relay_Swimmer_4_Para = c("S13",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "S12", "S13", "S13", "S13", "S11"), Split_50 = c("28.78",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "27.28", "32.29", "29.28", "28.14", NA), Split_100 = c("1:01.68",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "58.84", "1:10.18", "1:00.99", "58.62", "58.73"), Split_150 = c("27.82",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "26.17", "25.45", "29.69", "27.01", "32.01"), Split_200 = c("58.60",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         "55.60", "53.06", "1:01.73", "56.66", "1:06.13"), Split_250 = c("28.42",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         "29.16", "28.73", "30.26", "33.44", "33.43"), Split_300 = c("59.06",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "1:01.86", "59.46", "1:05.48", "1:14.77", "1:09.67"), Split_350 = c("26.04",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         "28.23", "25.04", "26.23", "28.17", "29.61"), Split_400 = c("54.45",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "58.65", "52.45", "55.18", "58.61", "1:04.07")), row.names = c(NA,
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    -6L), class = "data.frame")
+            expect_equivalent(df_standard,
+                              df_test)
+
+          })
+
+test_that("Tokyo Para men 4x100 Free Relay 34 Points, P in splits",
+          {
+            skip_on_cran()
+
+            file <-
+              "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/SwimmeR%20Test%20Files/PG2020_SWMM4X100MFR_FNL.pdf"
+
+            df_test <- file %>%
+              read_results() %>%
+              swim_parse(splits = TRUE,
+                         relay_swimmers = TRUE)
+
+            df_standard <-
+              structure(list(Place = c("1", "2", "3", "4", "5", "6", "7", "8"
+              ), Heat = c("Final", "Final", "Final", "Final", "Final", "Final",
+                          "Final", "Final"), Lane = c("3", "4", "5", "2", "6", "1", "7",
+                                                      "8"), Team = c("AUS - Australia", "ITA - Italy", "UKR - Ukraine",
+                                                                     "BRA - Brazil", "RPC - RPC", "CHN - People's Republic of China",
+                                                                     "ESP - Spain", "USA - United States of America"), Finals_Time = c("3:44.31",
+                                                                                                                                       "3:45.89", "3:47.40", "3:52.28", "3:54.34", "4:00.18", "4:00.71",
+                                                                                                                                       "4:13.94"), DQ = c("0", "0", "0", "0", "0", "0", "0", "0"), Exhibition = c("0",
+                                                                                                                                                                                                                  "0", "0", "0", "0", "0", "0", "0"), Event = c("Men's 4x100m Freestyle Relay - 34 Points",
+                                                                                                                                                                                                                                                                "Men's 4x100m Freestyle Relay - 34 Points", "Men's 4x100m Freestyle Relay - 34 Points",
+                                                                                                                                                                                                                                                                "Men's 4x100m Freestyle Relay - 34 Points", "Men's 4x100m Freestyle Relay - 34 Points",
+                                                                                                                                                                                                                                                                "Men's 4x100m Freestyle Relay - 34 Points", "Men's 4x100m Freestyle Relay - 34 Points",
+                                                                                                                                                                                                                                                                "Men's 4x100m Freestyle Relay - 34 Points"), Relay_Swimmer_1 = c("CROTHERS Rowan",
+                                                                                                                                                                                                                                                                                                                                 "FANTIN Antonio", "BOZHYNSKYI Yurii", "GONCALVES SILVA Ruiter Antonio",
+                                                                                                                                                                                                                                                                                                                                 "MOZGOVOI Bogdan", "YANG Guanglong", "GARRIDO BRUN Jacobo", "GARCIA-TOLSON Rudy"
+                                                                                                                                                                                                                                                                ), Relay_Swimmer_1_Para = c("S10", "S6", "S9", "S9", "S9", "S8",
+                                                                                                                                                                                                                                                                                            "S9", "S7"), Relay_Swimmer_2 = c("MARTIN William", "CIULLI Simone",
+                                                                                                                                                                                                                                                                                                                             "DUBROV Denys", "FILHO Vanilton", "GLADKOV Andrei", "LIU Fengqi",
+                                                                                                                                                                                                                                                                                                                             "MARTOS MINGUET Sergio Salvador", "PEPPERSACK Joseph"), Relay_Swimmer_2_Para = c("S9",
+                                                                                                                                                                                                                                                                                                                                                                                                              "S9", "S8", "S9", "S7", "S8", "S8", "S8"), Relay_Swimmer_3 = c("LEVY Matthew",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "BARLAAM Simone", "TRUSOV Andrii", "GLOCK Talisson Henrique",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "NIKOLAEV Andrei", "YANG Feng", "LLOPIS SANZ Inigo", "AUSTIN Evan"
+                                                                                                                                                                                                                                                                                                                                                                                                              ), Relay_Swimmer_3_Para = c("S7", "S9", "S7", "S6", "S8", "S8",
+                                                                                                                                                                                                                                                                                                                                                                                                                                          "S8", "S7"), Relay_Swimmer_4 = c("POPHAM Ben", "RAIMONDI Stefano",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "KRYPAK Maksym", "MELO RODRIGUES Phelipe Andrews", "BARTASINSKII Dmitrii",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "XU Haijiao", "MARI ALCARAZ Jose Antonio", "HILL Jamal"), Relay_Swimmer_4_Para = c("S8",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              "S10", "S10", "S10", "S10", "S8", "S9", "S9"), Split_50 = c("24.71",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          "31.99", "28.16", "27.29", "27.80", "28.41", "28.66", "32.85"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              ), Split_100 = c("51.35", "1:04.20", "1:00.03", "57.77", "57.23",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               "59.40", "58.52", "1:08.50"), Split_150 = c("25.72", "26.66",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "28.22", "27.56", "31.43", "28.10", "29.13", "29.93"), Split_200 = c("54.53",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                "57.23", "58.94", "57.73", "1:05.55", "58.72", "1:02.84", "1:03.01"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           ), Split_250 = c("28.97", "25.33", "27.64", "31.40", "27.95",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            "29.27", "29.26", "31.36"), Split_300 = c("1:01.30", "53.69",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "58.19", "1:05.38", "57.79", "1:02.56", "1:01.88", "1:04.20"),
+              Split_350 = c("27.72", "23.76", "23.55", "23.84", "25.50",
+                            "28.23", "27.50", "26.78"), Split_400 = c("57.13", "50.77",
+                                                                      "50.24", "51.40", "53.77", "59.50", "57.47", "58.23")), row.names = c(NA,
+                                                                                                                                            -8L), class = "data.frame")
+            expect_equivalent(df_standard,
+                              df_test)
+
+          })
+
+test_that("Tokyo Para Women 150IM-SM4",
+          {
+            skip_on_cran()
+
+            file <-
+              "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Paralympics2020/raw_files/PG2020_SWMW150MIM_04042_FNL.pdf"
+
+            df_test <- file %>%
+              read_results() %>%
+              swim_parse(splits = TRUE,
+                         relay_swimmers = TRUE)
+
+            df_standard <-
+              structure(list(Place = c("1", "2", "3", "4", "5", "6", "7", "8"
+              ), Heat = c("Final", "Final", "Final", "Final", "Final", "Final",
+                          "Final", "Final"), Lane = c("4", "5", "3", "6", "7", "8", "1",
+                                                      "2"), Name = c("LIU Yu", "ZHOU Yanfei", "BUTKOVA Nataliia", "FERNANDEZ INFANTE Marta",
+                                                                     "SMITH Leanne", "MIRANDA HERRERA Nely", "VERBOVA Maryna", "SCHNARNDORF Susana"
+                                                      ), Para = c("SM4", "SM4", "SM4", "SM4", "SM3", "SM4", "SM4",
+                                                                  "SM4"), Team = c("CHN", "CHN", "RPC", "ESP", "USA", "MEX", "UKR",
+                                                                                   "BRA"), Reaction_Time = c("0.85", "1.05", "0.85", "0.90", "1.46",
+                                                                                                             "0.58", "0.75", "0.79"), Finals_Time = c("2:41.91", "2:47.41",
+                                                                                                                                                      "2:53.25", "2:59.13", "3:07.07", "3:08.71", "3:09.17", "3:11.54"
+                                                                                                             ), DQ = c("0", "0", "0", "0", "0", "0", "0", "0"), Exhibition = c("0",
+                                                                                                                                                                               "0", "0", "0", "0", "0", "0", "0"), Event = c("Women's 150m Individual Medley - SM4",
+                                                                                                                                                                                                                             "Women's 150m Individual Medley - SM4", "Women's 150m Individual Medley - SM4",
+                                                                                                                                                                                                                             "Women's 150m Individual Medley - SM4", "Women's 150m Individual Medley - SM4",
+                                                                                                                                                                                                                             "Women's 150m Individual Medley - SM4", "Women's 150m Individual Medley - SM4",
+                                                                                                                                                                                                                             "Women's 150m Individual Medley - SM4"), Split_50 = c("45.62",
+                                                                                                                                                                                                                                                                                   "50.45", "54.14", "68.59", "59.85", "57.41", "53.92", "61.32"
+                                                                                                                                                                                                                             ), Split_100 = c("63.18", "68.72", "68.71", "64.53", "70.97",
+                                                                                                                                                                                                                                              "78.58", "72.07", "73.89"), Split_150 = c("53.11", "48.24", "50.40",
+                                                                                                                                                                                                                                                                                        "46.01", "56.25", "52.72", "63.18", "56.33")), row.names = c(NA,
+                                                                                                                                                                                                                                                                                                                                                     -8L), class = "data.frame")
+
+
+
+            expect_equivalent(df_standard,
+                              df_test)
+
+          })
+
+test_that("Tokyo Para Mixed 4x50m Freestyle Relay - 20 Points",
+          {
+            skip_on_cran()
+
+            file <-
+              "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Paralympics2020/raw_files/PG2020_SWMX4X50MFR_10101_FNL.pdf"
+
+            df_test <- file %>%
+              read_results() %>%
+              swim_parse(splits = TRUE,
+                         relay_swimmers = TRUE)
+
+            df_standard <-
+              structure(list(Place = c("1", "2", "3", "4", "5", "6", "7", "8"
+              ), Heat = c("Final", "Final", "Final", "Final", "Final", "Final",
+                          "Final", "Final"), Lane = c("6", "4", "7", "5", "3", "2", "8",
+                                                      "1"), Team = c("CHN - People's Republic of China", "ITA - Italy",
+                                                                     "BRA - Brazil", "UKR - Ukraine", "ESP - Spain", "RPC - RPC",
+                                                                     "TUR - Turkey", "GBR - Great Britain"), Finals_Time = c("2:15.49",
+                                                                                                                             "2:21.45", "2:24.82", "2:24.89", "2:25.66", "2:35.66", "2:42.43",
+                                                                                                                             "2:48.34"), DQ = c("0", "0", "0", "0", "0", "0", "0", "0"), Exhibition = c("0",
+                                                                                                                                                                                                        "0", "0", "0", "0", "0", "0", "0"), Event = c("Mixed 4x50m Freestyle Relay - 20 Points",
+                                                                                                                                                                                                                                                      "Mixed 4x50m Freestyle Relay - 20 Points", "Mixed 4x50m Freestyle Relay - 20 Points",
+                                                                                                                                                                                                                                                      "Mixed 4x50m Freestyle Relay - 20 Points", "Mixed 4x50m Freestyle Relay - 20 Points",
+                                                                                                                                                                                                                                                      "Mixed 4x50m Freestyle Relay - 20 Points", "Mixed 4x50m Freestyle Relay - 20 Points",
+                                                                                                                                                                                                                                                      "Mixed 4x50m Freestyle Relay - 20 Points"), Relay_Swimmer_1 = c("ZHANG Li",
+                                                                                                                                                                                                                                                                                                                      "TERZI Giulia", "PEREIRA dos SANTOS Patricia", "OSTAPCHENKO Denys",
+                                                                                                                                                                                                                                                                                                                      "PERALES Teresa", "BUTKOVA Nataliia", "KUTLU Koral Berkin", "KEARNEY Tully"
+                                                                                                                                                                                                                                                      ), Relay_Swimmer_1_Gender = c("F", "F", "F", "M", "F", "F", "M",
+                                                                                                                                                                                                                                                                                    "F"), Relay_Swimmer_1_Para = c("S5", "S7", "S4", "S3", "S5",
+                                                                                                                                                                                                                                                                                                                   "S4", "S5", "S5"), Relay_Swimmer_2 = c("ZHENG Tao", "TRIMI Arjola",
+                                                                                                                                                                                                                                                                                                                                                          "de FARIA DIAS Daniel", "SEMENENKO Yaroslav", "FERNANDEZ INFANTE Marta",
+                                                                                                                                                                                                                                                                                                                                                          "PALIAN Ani", "BOYACI Sumeyye", "LONGHORNE Lyndon"), Relay_Swimmer_2_Gender = c("M",
+                                                                                                                                                                                                                                                                                                                                                                                                                                          "F", "M", "M", "F", "F", "F", "M"), Relay_Swimmer_2_Para = c("S5",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       "S3", "S5", "S5", "S4", "S7", "S5", "S4"), Relay_Swimmer_3 = c("YUAN Weiyi",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "BEGGIATO Luigi", "da SILVA NEVES EUZEBIO J", "HONTAR Anna",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      "SANCHEZ SIERRA David", "ZHDANOV Roman", "OZTURK Sevilay", "CHALLIS Ellie"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       ), Relay_Swimmer_3_Gender = c("M", "M", "F", "F", "M", "M", "F",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "F"), Relay_Swimmer_3_Para = c("S5", "S4", "S5", "S6", "S6",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    "S4", "S5", "S3"), Relay_Swimmer_4 = c("LU Dong", "FANTIN Antonio",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "GLOCK Talisson Henrique", "MERESHKO Yelyzaveta", "PONCE BERTRAN Antoni",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "KUBASOV Artur", "EROGLU Beytullah", "PERRY William"), Relay_Swimmer_4_Gender = c("F",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             "M", "M", "F", "M", "M", "M", "M"), Relay_Swimmer_4_Para = c("S5",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          "S6", "S6", "S6", "S5", "S5", "S5", "S6"), Split_50 = c("36.22",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  "32.89", "44.85", "46.46", "38.56", "44.11", "36.03", "35.68"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          ), Split_100 = c("30.48", "40.39", "31.58", "32.30", "40.43",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           "33.47", "43.05", "44.11"), Split_150 = c("31.38", "39.16", "37.72",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     "33.20", "31.97", "41.41", "44.08", "55.13"), Split_200 = c("37.41",
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 "29.01", "30.67", "32.93", "34.70", "36.67", "39.27", "33.42"
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     )), row.names = c(NA, -8L), class = "data.frame")
+            expect_equivalent(df_standard,
+                              df_test)
+
+          })
 
 # testthat::test_file("tests/testthat/test-omega.R")

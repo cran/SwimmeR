@@ -16,11 +16,10 @@
 
 ### Latest Development Version from Github
 
-Version 0.12.0
+Version 0.13.0
 
-* ISL season 2 bug fixes
-* Further improvements for handling Tokyo Olympics results
-* Reaction times now included for Hytek results (individual events only)
+* Splash results improving, now include relay swimmers, splits
+* various speed improvements
 
 `devtools::install_github("gpilgrim2670/SwimmeR", build_vignettes = TRUE)`
 

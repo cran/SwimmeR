@@ -3,14 +3,12 @@
 #' Takes the output of \code{read_results} and, inside of \code{swim_parse},
 #' extracts split times and associated row numbers
 #'
-#' @author Greg Pilgrim \email{gpilgrim2670@@gmail.com}
-#'
-#' @importFrom dplyr full_join
 #' @importFrom dplyr bind_rows
 #' @importFrom dplyr rename_at
 #' @importFrom dplyr mutate_at
 #' @importFrom dplyr rename
 #' @importFrom dplyr vars
+#' @importFrom dplyr all_of
 #' @importFrom stringr str_replace_all
 #' @importFrom stringr str_remove_all
 #' @importFrom stringr str_extract_all
@@ -23,7 +21,7 @@
 #'   \code{add_row_numbers}
 #' @param split_len length of pool at which splits are measured - usually 25 or
 #'   50
-#' @return returns a dataframe with split times and row numbers
+#' @return returns a data frame with split times and row numbers
 #'
 #' @seealso \code{splits_parse} runs inside \code{\link{swim_parse}} on the
 #'   output of \code{\link{read_results}} with row numbers from
@@ -55,8 +53,7 @@ splits_parse <- function(text, split_len = split_length) {
     "\\(\\d{0,2}\\:?\\d\\d\\.\\d\\d\\)|\\s\\d{0,2}\\:?\\d\\d\\.\\d\\d\\s|\\s[8-9]\\.\\d{2}"
 
   row_numbs <- text %>%
-    .[purrr::map_lgl(.,
-                     stringr::str_detect,
+    .[stringr::str_detect(.,
                      split_string)] %>%
     stringr::str_extract_all("\\d{1,}$")
   flag <- FALSE
@@ -64,12 +61,10 @@ splits_parse <- function(text, split_len = split_length) {
   if (length(row_numbs) == 0) { # looks for splits that don't have parenthesis around them but will also capture rows with normal times
 
     row_numbs <- text %>%
-      .[purrr::map_lgl(.,
-                       stringr::str_detect,
+      .[stringr::str_detect(.,
                        split_string_parens)] %>%
       stringr::str_remove_all("r\\:\\+?\\s?\\d?\\d\\.\\d\\d") %>%
-      .[purrr::map_lgl(., # remove rows with letters, which should take care of removing normal (non-split) times
-                       stringr::str_detect,
+      .[stringr::str_detect(.,
                        "[:alpha:]", negate = TRUE)] %>%
       stringr::str_extract_all("\\d{1,}$")
     flag <- TRUE # sets flag to warn for possible rows with letters in them for next step
@@ -88,23 +83,20 @@ splits_parse <- function(text, split_len = split_length) {
       # if there's a risk of rows with letters
 
       data_1_splits <- text %>%
-        .[purrr::map_lgl(.,
-                         stringr::str_detect,
+        .[stringr::str_detect(.,
                          split_string)]
 
       # in some cases all splits are without parens
       if (length(data_1_splits) < 1) {
         data_1_splits <- text %>%
-          .[purrr::map_lgl(.,
-                           stringr::str_detect,
+          .[stringr::str_detect(.,
                            split_string_parens)]
       }
 
       suppressWarnings(
         data_1_splits <- data_1_splits %>%
           stringr::str_remove_all("r\\:\\+?\\s?\\d?\\d\\.\\d\\d") %>%
-          .[purrr::map_lgl(., # removes rows with letters
-                           stringr::str_detect,
+          .[stringr::str_detect(.,
                            "[:alpha:]", negate = TRUE)] %>%
           stringr::str_remove_all("\n") %>%
           # stringr::str_remove_all("r\\:\\+?\\s?\\d?\\d\\.\\d\\d") %>%
@@ -120,8 +112,7 @@ splits_parse <- function(text, split_len = split_length) {
     } else {
       suppressWarnings(
         data_1_splits <- text %>%
-          .[purrr::map_lgl(.,
-                           stringr::str_detect,
+          .[stringr::str_detect(.,
                            split_string)] %>%
           stringr::str_replace_all("\n", "") %>%
           # stringr::str_replace_all("r\\:\\+\\s?\\d\\.\\d\\d", "") %>%
@@ -281,7 +272,7 @@ splits_parse <- function(text, split_len = split_length) {
       paste("Split", seq(1, length(names(data_splits)) - 1) * split_len, sep = "_")
 
     data_splits <- data_splits %>%
-      dplyr::rename_at(dplyr::vars(old_names), ~ new_names)
+      dplyr::rename_at(dplyr::vars(dplyr::all_of(old_names)), ~ new_names)
 
   } else { # if there are no rows with valid splits return blank dataframe
     data_splits <- data.frame(Row_Numb = as.numeric())

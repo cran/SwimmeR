@@ -2,8 +2,8 @@
 % Please edit documentation in R/omega_swim_parse.R
 \name{swim_parse_omega}
 \alias{swim_parse_omega}
-\title{Formats swimming and diving data read with \code{read_results} into a data
-frame}
+\title{Formats Omega style swimming and diving data read with \code{read_results}
+into a data frame}
 \usage{
 swim_parse_omega(
   file_omega,

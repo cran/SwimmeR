@@ -1,3 +1,28 @@
+# SwimmeR 0.13.0 - November 5th 2021
+* CRAN release
+* contains all dev version updates since SwimmeR 0.12.0
+
+# SwimmeR 0.12.6 - October 19th 2021
+* Splash results now include relay swimmers
+* various speed improvements
+
+# SwimmeR 0.12.5 - August 31st 2021
+* Splash results
+* bug fix for empty files
+* Paralympics 2020 results complete
+
+# SwimmeR 0.12.4 - August 31st 2021
+* Started Paralympics 2020 results
+
+# SwimmeR 0.12.3 - August 30th 2021
+* Moved `swim_parse_ISL` inside of `swim_parse`
+
+# SwimmeR 0.12.2 - August 30th 2021
+* `course_convert` is now vectorized, works well in `dplyr` pipes
+
+# SwimmeR 0.12.1 - August 19th 2021
+* Initial work in Splash Meet Manager/Swimming Federation of India results
+
 # SwimmeR 0.12.0 - August 13th 2021
 * CRAN release
 * contains all dev version updates since SwimmeR 0.11.0

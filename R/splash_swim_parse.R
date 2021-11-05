@@ -1,0 +1,939 @@
+#' Formats Splash style swimming and diving data read with \code{read_results}
+#' into a data frame
+#'
+#' Takes the output of \code{read_results} and cleans it, yielding a data frame
+#' of swimming (and diving) results
+#'
+#' @importFrom dplyr mutate
+#' @importFrom dplyr lag
+#' @importFrom dplyr case_when
+#' @importFrom dplyr na_if
+#' @importFrom dplyr select
+#' @importFrom dplyr arrange
+#' @importFrom dplyr filter
+#' @importFrom dplyr bind_rows
+#' @importFrom dplyr everything
+#' @importFrom dplyr pull
+#' @importFrom dplyr select
+#' @importFrom dplyr starts_with
+#' @importFrom stringr str_replace_all
+#' @importFrom stringr str_extract
+#' @importFrom stringr str_split
+#' @importFrom stringr str_detect
+#' @importFrom stringr str_length
+#' @importFrom stringr str_sort
+#' @importFrom purrr map_lgl
+#' @importFrom purrr map
+#' @importFrom stats setNames
+#'
+#' @param file_splash output from \code{read_results}
+#' @param avoid_splash a list of strings.  Rows in \code{file_splash} containing
+#'   these strings will not be included. For example "Pool:", often used to
+#'   label pool records, could be passed to \code{avoid_splash}.  The default is
+#'   \code{avoid_default}, which contains many strings similar to "Pool:", such
+#'   as "STATE:" and "Qual:".  Users can supply their own lists to
+#'   \code{avoid_splash}. \code{avoid_splash} is handled before \code{typo_splash}
+#'   and \code{replacement_splash}.
+#' @param typo_splash a list of strings that are typos in the original results.
+#'   \code{swim_parse} is particularly sensitive to accidental double spaces, so
+#'   "Central  High School", with two spaces between "Central" and "High" is a
+#'   problem, which can be fixed.  Pass "Central  High School" to
+#'   \code{typo_splash}. Unexpected commas as also an issue, for example "Texas,
+#'   University of" should be fixed using \code{typo_splash} and
+#'   \code{replacement_splash}
+#' @param replacement_splash a list of fixes for the strings in
+#'   \code{typo_splash}.  Here one could pass "Central High School" (one space
+#'   between "Central" and "High") and "Texas" to \code{replacement_splash} fix
+#'   the issues described in \code{typo_splash}
+#' @param format_results should the results be formatted for analysis (special
+#'   strings like \code{"DQ"} replaced with \code{NA}, \code{Finals_Time} as
+#'   definitive column)?  Default is \code{TRUE}
+#' @param splits either \code{TRUE} or the default, \code{FALSE} - should
+#'   \code{swim_parse} attempt to include splits.
+#' @param split_length_splash either \code{25} or the default, \code{50}, the
+#'   length of pool at which splits are recorded.  Not all results are
+#'   internally consistent on this issue - some have races with splits by 50 and
+#'   other races with splits by 25.
+#' @param relay_swimmers_splash should names of relay swimmers be captured?
+#'   Default is \code{FALSE}
+#' @return returns a data frame with columns \code{Name}, \code{Place},
+#'   \code{Age}, \code{Team}, \code{Prelims_Time}, \code{Finals_Time},
+#'   \code{Points}, \code{Event} & \code{DQ}.  Note all swims will have a
+#'   \code{Finals_Time}, even if that time was actually swam in the prelims
+#'   (i.e. a swimmer did not qualify for finals).  This is so that final results
+#'   for an event can be generated from just one column.
+#'
+#' @seealso \code{swim_parse_splash} must be run on the output of
+#'   \code{\link{read_results}}
+
+swim_parse_splash <-
+  function(file_splash,
+           avoid_splash = avoid,
+           typo_splash = typo,
+           replacement_splash = replacement,
+           format_results = TRUE,
+           splits = FALSE,
+           split_length_splash = split_length,
+           relay_swimmers_splash = relay_swimmers) {
+    #### Testing ####
+    # file_splash <-
+    #   read_results(
+    #     "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Splash/Glenmark_Senior_Nationals_2019.pdf"
+    #   )
+    # file_splash <-
+    #   "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Splash/Khelo_India_Youth_Games_2020.pdf" %>%
+    #   read_results()
+    # file_splash <- "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Splash/European_Jr_Champs_2012.pdf" %>%
+    #   read_results()
+    # file_splash <- "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Splash/Arena_European_Junior_Swimming_Champs_2013.pdf" %>%
+    #   read_results()
+    # file_splash <- "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Splash/Open_Belgian_Champs_2017.pdf" %>%
+    #   read_results()
+    # file_splash <- "http://www.toptime.be/oresults/ResultList_111_us.pdf" %>%
+    #   read_results()
+    # file_splash <- "http://www.toptime.be/oresults/ResultList_75_us.pdf" %>%
+    #   read_results()
+    # file_splash <- "https://eoz.in.th/eozlive/ResultList_101.pdf" %>%
+    #   read_results()
+    # file_splash <- "http://eliteteamenergystandard.org/images/EURO_MEET_2018.pdf" %>%
+    #   read_results()
+    # avoid_splash <- c("abcxyz")
+    # typo_splash <- c("typo")
+    # replacement_splash <- c("typo")
+    # split_length_splash <- 50
+    # relay_swimmers_splash <- TRUE
+    # splits <- TRUE
+
+    #### Begin Actual Function ####
+    as_lines_list_2 <- file_splash %>%
+      add_row_numbers() %>%
+      .[purrr::map_lgl(., ~ !any(stringr::str_detect(., avoid_splash)))] %>%
+      stringr::str_replace_all(stats::setNames(replacement_splash, typo_splash))
+
+    #### Pulls out event labels from text ####
+    events <- event_parse(as_lines_list_2)
+
+    #### set up strings ####
+    Name_String <-
+      "_?[:alpha:]+\\s?\\'?[:alpha:\\-\\'\\.]*\\s?[:alpha:\\-\\'\\.]*\\s?[:alpha:\\-\\'\\.]*,?\\s?[:alpha:\\-\\'\\.]*\\s?[:alpha:]*\\s?[:alpha:]*\\s?[:alpha:]*\\.?,? [:alpha:]+\\s?[:alpha:\\-\\'\\.]*\\s?[:alpha:\\-\\']*\\s?[:alpha:]*\\s?[:alpha:]*\\s?[:alpha:\\.]*"
+    Time_Score_String <- "1?\\:?\\d{0,2}\\:?\\d{1,3}\\.\\d{2}"
+    Time_Score_Specials_String <-
+      paste0("^NT$|^NP$|^DQ$|^DSQ$|^D?NS$|^SCR$|^x?X?",
+             Time_Score_String,
+             "x?X?$")
+    Time_Score_Specials_String_Extract <-
+      paste0(Time_Score_String, "|^NT$|^NP$|^DQ$|^NS$|^SCR$")
+    Para_String <- "^SB?M?\\d{1,2}$"
+    Reaction_String <-
+      "^\\+\\s?\\d\\.\\d{3}$|^\\-\\s?\\d\\.\\d{3}$|^0\\.00$|^0\\.\\d\\d$"
+    Record_String <- "^NMR|^E J C|^W J C|^Open [W|M] |[:alpha:] Record "
+    Rule_String <- "SW \\d\\d?\\.\\d\\d?"
+    Header_String <- "\\sDisqualified\\s|\\sReaction\\sTime\\s|Prelims|Finals|Semifinal"
+    Heat_String <-
+      "Heat\\s\\d{1,}\\sof\\s\\d{1,}|Semifinal\\s+\\d{1,}|Final|(Heats?)(?![:alpha:])"
+    Heat_Lane_String <- "\\d{1,}\\/\\d{1,}"
+    Sponsorship_String <- "sponsored by"
+
+    # Indent Length is used to differentiate ties (whose lines don't start with a place/DQ) and relay swimmers
+    # whose lines also don't start with a place/DQ.  Relay swimmers are indented further, but overall indents
+    # vary from results to results
+    Indent_Length <- as_lines_list_2 %>%
+      determine_indent_length_splash(time_score_string = Time_Score_String)
+
+    data_cleaned <- as_lines_list_2 %>%
+      # stringr::str_remove("^\n\\s{0,}") %>%
+      stringr::str_remove("^\n") %>%
+      .[stringr::str_detect(.,
+                       paste0("^\\s{", Indent_Length, ",}"),
+                       negate = TRUE)] %>% # removes relay swimmer rows
+      stringr::str_remove("^\\s{0,}") %>%
+      .[stringr::str_length(.) > 50] %>% # slight speed boost from cutting down length of file
+      .[stringr::str_detect(.,
+                       paste0(Time_Score_String, "|DSQ|SCR|DNS"))] %>% # must have \\.\\d\\d because all swimming and diving times do
+      .[stringr::str_detect(.,
+                       paste0(Record_String, "|Splash Meet Manager"),
+                       negate = TRUE)] %>%
+      .[stringr::str_detect(.,
+                            Header_String,
+                            negate = TRUE)] %>%
+      .[stringr::str_detect(.,
+                            Sponsorship_String,
+                            negate = TRUE)] %>%
+      .[stringr::str_detect(., "\\dm\\:", negate = TRUE)] %>% # removes split lines
+      # .[purrr::map_lgl(., stringr::str_detect, "^\\d+|^DSQ")] %>%
+      .[stringr::str_detect(., "\\d\\.\\d{2}\\s+[[:alpha:]\\'\\.]{2,}", negate = TRUE)] %>% # removes relay swimmer rows
+      .[stringr::str_detect(., Reaction_String, negate = TRUE)] %>% # also removes relay swimmer rows
+      #.[purrr::map_lgl(., stringr::str_detect, "^[:alpha:]+\\'?\\s?[:alpha:]{0,}\\,", negate = TRUE)] %>% # also removes relay swimmer rows
+      .[stringr::str_detect(., Rule_String, negate = TRUE)] %>% # also removes rows with rule numbers for DQ reasons
+      stringr::str_replace_all("(?<=\\d\\.) (?=[:alpha:])", "  ") %>% # split places (1.) and names
+      stringr::str_replace_all("(?<=^DNS)(?=[:alpha:])", "  ") %>% # split DNS and names
+      stringr::str_replace_all("(?<=^DSQ)(?=[:alpha:])", "  ") %>% # split DNS and names
+      stringr::str_replace_all("(?<=\\d) (?=\\d)", "  ") %>% # split times and scores
+      stringr::str_replace_all("(?<=[:alpha:]\\.) (?=\\d\\d)", "  ") %>% # split names ending in "." and ages
+      stringr::str_replace_all("(?<=[:alpha:]) (?=\\d)", "  ") %>% # split names and ages
+      stringr::str_replace_all(" \\? ", "  ") %>% # remove ? as label
+      stringr::str_replace_all(" \\* ", "  ") %>%
+      stringr::str_replace_all("(?<=\\d)\\s+[:upper:]R?\\*?\\s", "  ") %>% # remove Q, R etc. as label
+      stringr::str_replace_all("(?<=\\d)[:upper:]R?\\*?\\s", "  ") %>% # remove Q, R etc. as label
+      stringr::str_replace_all("(?<=\\d)[:upper:]{1,2}[:lower:]{0,2}\\.?\\*?\\s", "  ") %>% # remove Q, R etc. as label
+      stringr::str_replace_all("(?<=\\d)\\*[:alpha:]{0,4}\\.?\\s", "  ") %>% # remove * as label
+      stringr::str_replace_all(" q ", "  ") %>% # remove Q, R etc. as label
+      stringr::str_replace_all("(?<=\\d)\\.(?=[:alpha:])", "\\.   ") %>%
+      stringr::str_replace_all("  ([:upper:]{2,3})\\s\\s+([:alpha:]{2,}\\s?[:alpha:]{0,})", " \\1-\\2   ") %>% # merge team and country names
+      trimws()
+
+    data_cleaned <- data_cleaned %>%
+      stringr::str_replace("^DNS", "888\\.  DNS") %>%  # splash for dealing with ties, DQS etc.
+      stringr::str_replace("^DFS", "888\\.  DFS") %>%  # splash for dealing with ties
+      stringr::str_replace("^DSQ", "888\\.  DSQ") %>%  # splash for dealing with ties
+      stringr::str_replace("^([^[0-9]])", "999\\.  \\1") %>%   # splash for dealing with ties
+      stringr::str_replace(" \\/ ", "/") %>%   # splash for dealing with Heat/Lane columns
+      stringr::str_replace_all("([:alpha:]\\.?\\:?\\s?)(\\d{1,2}[\\:|\\.])", "\\1  \\2") %>%  # splits teams and times
+      stringr::str_remove("^888\\.  ") %>%  # want to keep DSQ, DNS in first column, but need to move ties over one column
+      stringr::str_replace("(?<=[:alpha:])\\s{1,}\\d{1,4}\\s{0,}(?=\\s{2}\\d{1,2}(\\:|\\.))", "   ") %>%  # remove numbers floating off of team names
+      stringr::str_replace("(?<=[:alpha:]\\s{1,4})\\d{1,4}\\s{0,}(?=\\s{2}\\d{1,5}$)", "   ") %>%  # remove numbers floating off of team names
+      stringr::str_replace("(?<=[:alpha:])\\s{1,2}\\d{4}\\s{1,2}(?=[:alpha:])", " ") %>%
+      stringr::str_replace_all("(\\s{2}\\d{2}\\s)(?=[:alpha:])", "\\1  ") %>%  # splits ages and teams
+      stringr::str_replace_all("(?<=[:alpha:])(?=\\d{1,3})", "  ") %>%  # splits ages and teams
+      stringr::str_replace_all("(\\.\\d{2}\\s)\\s(?=\\d{3})", "\\1  ") %>%  # splits times and scores
+      stringr::str_replace_all("(\\d{2,3})\\s(?=[\\+|\\-]\\d\\.\\d{2})", "  ") %>%  # splits reaction times and scores
+      stringr::str_replace("DNS ", "DNS  ") %>%
+      stringr::str_replace("DFS ", "DFS  ") %>%
+      stringr::str_replace("DSQ ", "DSQ  ") %>%
+      stringr::str_replace_all("1950 e.V:", "  ")  # bug fix for 2018 Euros
+
+    #### if data_cleaned is empty ####
+    if(!length(data_cleaned) > 0){
+      message("No results found in file")
+
+    } else {
+
+    #### splits data into variables by splitting at multiple (>= 2) spaces ####
+    data_cleaned <-
+      unlist(purrr::map(data_cleaned, stringr::str_split, "\\s{2,}"),
+             recursive = FALSE)
+
+    # unique(map(data_cleaned, length))
+
+    #### breaks data into subsets based on how many variables it has ####
+    # data_length_3 <- data_cleaned[purrr::map(data_cleaned, length) == 3]
+    data_length_4 <- data_cleaned[purrr::map(data_cleaned, length) == 4]
+    data_length_5 <- data_cleaned[purrr::map(data_cleaned, length) == 5]
+    data_length_6 <- data_cleaned[purrr::map(data_cleaned, length) == 6]
+    data_length_7 <- data_cleaned[purrr::map(data_cleaned, length) == 7]
+    data_length_8 <- data_cleaned[purrr::map(data_cleaned, length) == 8]
+    data_length_9 <- data_cleaned[purrr::map(data_cleaned, length) == 9]
+    data_length_10 <- data_cleaned[purrr::map(data_cleaned, length) == 10]
+    data_length_11 <- data_cleaned[purrr::map(data_cleaned, length) == 11]
+    data_length_12 <- data_cleaned[purrr::map(data_cleaned, length) == 12]
+    # data_length_13 <- data_cleaned[purrr::map(data_cleaned, length) == 13]
+
+    #### thirteen variables ####
+    # if (length(data_length_13) > 0) {
+    #   suppressWarnings(df_13 <- data_length_13 %>%
+    #                      list_transform() %>%
+    #                      dplyr::select(Place = V1,
+    #                                    Name = V2,
+    #                                    Age = V3,
+    #                                    Team = V4,
+    #                                    Finals_Time = V5,
+    #                                    Points = V6,
+    #                                    Split_1 = V7,
+    #                                    Split_2 = V8,
+    #                                    Split_3 = V9,
+    #                                    Split_4 = V10,
+    #                                    Row_Numb = V13))
+    # } else {
+    #   df_13 <- data.frame(Row_Numb = character(),
+    #                       stringsAsFactors = FALSE)
+    # }
+
+    #### twelve variables ####
+    if (length(data_length_12) > 0) {
+      suppressWarnings(df_12 <- data_length_12 %>%
+                         list_transform() %>%
+                         dplyr::select(Place = V1,
+                                       Name = V2,
+                                       Age = V3,
+                                       Team = V4,
+                                       Finals_Time = V5,
+                                       Points = V6,
+                                       Reaction_Time = V7,
+                                       Split_1 = V8,
+                                       Split_2 = V9,
+                                       Split_3 = V10,
+                                       Split_4 = V11,
+                                       Row_Numb = V12))
+    } else {
+      df_12 <- data.frame(Row_Numb = character(),
+                          stringsAsFactors = FALSE)
+    }
+
+    #### eleven variables ####
+    if (length(data_length_11) > 0) {
+      suppressWarnings(df_11 <- data_length_11 %>%
+                         list_transform() %>%
+                         dplyr::mutate(Age = dplyr::case_when(stringr::str_detect(V3, "\\d\\d") == TRUE &
+                                                                stringr::str_detect(V3, "[:alpha:]|\\.") == FALSE ~ V3,
+                                                              TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Team = dplyr::case_when(stringr::str_detect(V3, Age) == TRUE ~ V4,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V3,
+                                                               TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(
+                           Finals_Time = dplyr::case_when(
+                             str_detect(V4, Time_Score_Specials_String) == TRUE ~ V4,
+                             stringr::str_detect(V4, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V5, Time_Score_Specials_String) == TRUE ~ V5,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(
+                           Points = dplyr::case_when(
+                             stringr::str_detect(V5, "\\d+") == TRUE &
+                               stringr::str_detect(V5, "\\.") == FALSE ~ V5,
+                             stringr::str_detect(V6, "\\d+") == TRUE &
+                               stringr::str_detect(V6, "\\.") == FALSE ~ V6,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(Reaction_Time = dplyr::case_when(stringr::str_detect(V6, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V6,
+                                                                        TRUE ~ "Unknown")) %>%
+                         dplyr::select(Place = V1,
+                                Name = V2,
+                                Age,
+                                Team,
+                                Finals_Time,
+                                Points,
+                                Reaction_Time,
+                                Split_1 = V7,
+                                Split_2 = V8,
+                                Split_3 = V9,
+                                Split_4 = V10,
+                                Row_Numb = V11))
+    } else {
+      df_11 <- data.frame(Row_Numb = character(),
+                          stringsAsFactors = FALSE)
+    }
+
+    #### ten variables ####
+    if (length(data_length_10) > 0) {
+      suppressWarnings(df_10 <- data_length_10 %>%
+                         list_transform() %>%
+                         dplyr::mutate(Age = dplyr::case_when(stringr::str_detect(V3, "\\d\\d\\d?") == TRUE &
+                                                                stringr::str_detect(V3, "[:alpha:]|\\.") == FALSE ~ V3,
+                                                              TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Team = dplyr::case_when(stringr::str_detect(V3, Age) == TRUE ~ V4,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V3,
+                                                               TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(
+                           Finals_Time = dplyr::case_when(
+                             str_detect(V3, Time_Score_Specials_String) == TRUE &
+                               str_detect(V4, Time_Score_Specials_String) == FALSE ~ V3,
+                             str_detect(V4, Time_Score_Specials_String) == TRUE ~ V4,
+                             stringr::str_detect(V4, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V5, Time_Score_Specials_String) == TRUE ~ V5,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(
+                           Points = dplyr::case_when(
+                             stringr::str_detect(V4, "\\d+") == TRUE &
+                               stringr::str_detect(V4, "\\.") == FALSE ~ V4,
+                             stringr::str_detect(V5, "\\d+") == TRUE &
+                               stringr::str_detect(V5, "\\.") == FALSE ~ V5,
+                             stringr::str_detect(V6, "\\d+") == TRUE &
+                               stringr::str_detect(V6, "\\.") == FALSE ~ V6,
+                             stringr::str_detect(V9, "\\d+") == TRUE &
+                               stringr::str_detect(V9, "\\.") == FALSE ~ V9,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(Reaction_Time = dplyr::case_when(stringr::str_detect(V5, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V5,
+                                                                        stringr::str_detect(V6, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V6,
+                                                                        stringr::str_detect(V7, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V7,
+                                                                        TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Split_1 = dplyr::case_when(V5 == Points & V4 == Finals_Time &
+                                                                    stringr::str_detect(V6, Time_Score_String) == TRUE ~ V6,
+                                                                  V4 == Points & V5 == Reaction_Time &
+                                                                    stringr::str_detect(V6, Time_Score_String) == TRUE ~ V6,
+                                                                  V7 == Reaction_Time &
+                                                                    stringr::str_detect(V8, Time_Score_String) == TRUE ~ V8,
+                                                                  TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Split_2 = dplyr::case_when(V5 == Points & V4 == Finals_Time &
+                                                                  V6 == Split_1 &
+                                                                  stringr::str_detect(V7, Time_Score_String) == TRUE ~ V7,
+                                                                  V4 == Points & V5 == Reaction_Time &
+                                                                    V6 == Split_1 &
+                                                                    stringr::str_detect(V7, Time_Score_String) == TRUE ~ V7,
+                                                                  V7 == Reaction_Time &
+                                                                    V8 == Split_1 &
+                                                                    stringr::str_detect(V9, Time_Score_String) == TRUE ~ V9,
+                                                                  TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Split_3 = dplyr::case_when(V5 == Points & V4 == Finals_Time &
+                                                                  V7 == Split_2 &
+                                                                  stringr::str_detect(V8, Time_Score_String) == TRUE ~ V8,
+                                                                  V4 == Points & V5 == Reaction_Time &
+                                                                    V7 == Split_2 &
+                                                                    stringr::str_detect(V8, Time_Score_String) == TRUE ~ V8,
+                                                                  TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Split_4 = dplyr::case_when(V5 == Points & V4 == Finals_Time &
+                                                                  V8 == Split_3 &
+                                                                  stringr::str_detect(V9, Time_Score_String) == TRUE ~ V9,
+                                                                  V4 == Points & V5 == Reaction_Time &
+                                                                    V8 == Split_3 &
+                                                                    stringr::str_detect(V9, Time_Score_String) == TRUE ~ V9,
+                                                                  TRUE ~ "Unknown")) %>%
+                         dplyr::select(Place = V1,
+                                Name = V2,
+                                Age,
+                                Team,
+                                Finals_Time,
+                                Points,
+                                Reaction_Time,
+                                Split_1,
+                                Split_2,
+                                Split_3,
+                                Split_4,
+                                Row_Numb = V10)
+                       )
+    } else {
+      df_10 <- data.frame(Row_Numb = character(),
+                         stringsAsFactors = FALSE)
+    }
+
+    #### nine variables ####
+    if (length(data_length_9) > 0) {
+      suppressWarnings(df_9 <- data_length_9 %>%
+                         list_transform() %>%
+                         dplyr::mutate(Age = dplyr::case_when(stringr::str_detect(V3, "^1?\\d\\d$") == TRUE &
+                                                                stringr::str_detect(V3, "[:alpha:]|\\.") == FALSE ~ V3,
+                                                              TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Heat_Lane = dplyr::case_when(stringr::str_detect(V4, Heat_Lane_String) == TRUE ~ V4,
+                                                                    stringr::str_detect(V5, Heat_Lane_String) == TRUE ~ V5,
+                                                                    TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Team = dplyr::case_when(stringr::str_detect(V3, Age) == TRUE &
+                                                                 stringr::str_detect(V4, Heat_Lane_String) == FALSE &
+                                                                 stringr::str_detect(V4, "[\\+|\\-]\\d\\.\\d{2}") == FALSE &
+                                                                 stringr::str_length(V4) > 1 ~ V4,
+                                                               stringr::str_detect(V3, "^\\d\\s?") == TRUE &
+                                                                 stringr::str_detect(V4, Heat_Lane_String) == FALSE &
+                                                                 stringr::str_detect(V4, "[\\+|\\-]\\d\\.\\d{2}") == FALSE &
+                                                                 stringr::str_length(V4) > 1 ~ V4,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V3,
+                                                               stringr::str_detect(V4, Heat_Lane_String) == TRUE &
+                                                                 stringr::str_detect(V5, Time_Score_Specials_String) == FALSE ~ V5,
+                                                               TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(
+                           Prelims_Time = dplyr::case_when(
+                             stringr::str_detect(V5, Time_Score_Specials_String) == FALSE &
+                             stringr::str_detect(V6, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V7, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V5, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V8, Time_Score_Specials_String) == FALSE ~ V6,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(
+                           Finals_Time = dplyr::case_when(
+                             stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V4,
+                             stringr::str_detect(V4, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V5, Time_Score_Specials_String) == TRUE ~ V5,
+                             stringr::str_detect(V5, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V6, Time_Score_Specials_String) == TRUE ~ V6,
+                             stringr::str_detect(V6, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V7, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V5, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V8, Time_Score_Specials_String) == FALSE ~ V7,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(
+                           Points = dplyr::case_when(
+                             stringr::str_detect(V5, "\\d+") == TRUE &
+                               stringr::str_detect(V5, "\\.") == FALSE ~ V5,
+                             stringr::str_detect(V6, "\\d+") == TRUE &
+                               stringr::str_detect(V6, "\\.") == FALSE ~ V6,
+                             stringr::str_detect(V7, "\\d+") == TRUE &
+                               stringr::str_detect(V7, "\\.") == FALSE ~ V7,
+                             stringr::str_detect(V8, "\\d+") == TRUE &
+                               stringr::str_detect(V8, "\\.") == FALSE ~ V8,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(Reaction_Time = dplyr::case_when(stringr::str_detect(V6, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V6,
+                                                                        stringr::str_detect(V7, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V7,
+                                                                        stringr::str_detect(V8, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V8,
+                                                                        TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Split_1 = dplyr::case_when(V6 %in% c(Points, Reaction_Time) & V5 == Finals_Time &
+                                                                    stringr::str_detect(V7, Time_Score_String) == TRUE ~ V7,
+                                                                  V5 == Points & V6 == Reaction_Time & V4 == Finals_Time &
+                                                                    stringr::str_detect(V7, Time_Score_String) == TRUE ~ V7,
+
+                                                                  TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Split_2 = dplyr::case_when(V6 %in% c(Points, Reaction_Time) & V5 == Finals_Time &
+                                                                    V7 == Split_1 &
+                                                                    stringr::str_detect(V8, Time_Score_String) == TRUE ~ V8,
+                                                                  V5 == Points & V6 == Reaction_Time & V4 == Finals_Time &
+                                                                    V7 == Split_1 &
+                                                                    stringr::str_detect(V8, Time_Score_String) == TRUE ~ V8,
+                                                                  TRUE ~ "Unknown")) %>%
+                         dplyr::select(Place = V1,
+                                       Name = V2,
+                                       Age,
+                                       Heat_Lane,
+                                       Team,
+                                       Prelims_Time,
+                                       Finals_Time,
+                                       Points,
+                                       Reaction_Time,
+                                       Split_1,
+                                       Split_2,
+                                       Row_Numb = V9)
+                       )
+    } else {
+      df_9 <- data.frame(Row_Numb = character(),
+                         stringsAsFactors = FALSE)
+    }
+
+    #### eight variables ####
+    if (length(data_length_8) > 0) {
+      suppressWarnings(df_8 <- data_length_8 %>%
+                         list_transform() %>%
+                         dplyr::mutate(Age = dplyr::case_when(stringr::str_detect(V3, "\\d\\d") == TRUE &
+                                                                stringr::str_detect(V3, "[:alpha:]|\\.") == FALSE ~ V3,
+                                                              TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Team = dplyr::case_when(stringr::str_detect(V3, Age) == TRUE ~ V4,
+                                                               stringr::str_detect(V3, "^\\d\\s?") == TRUE ~ V4,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V3,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, "^[:upper:]+$") == TRUE ~ V3,
+                                                               TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(
+                           Prelims_Time = dplyr::case_when(
+                             stringr::str_detect(V5, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V6, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V4, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V7, Time_Score_Specials_String) == FALSE ~ V5,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(
+                           Finals_Time = dplyr::case_when(
+                             str_detect(V4, Time_Score_Specials_String) == TRUE ~ V4,
+                               stringr::str_detect(V5, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V4, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V6, Time_Score_Specials_String) == FALSE ~ V5,
+                             stringr::str_detect(V5, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V6, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V4, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V7, Time_Score_Specials_String) == FALSE ~ V6,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(
+                           Points = dplyr::case_when(
+                             stringr::str_detect(V5, "\\d+") == TRUE &
+                               stringr::str_detect(V5, "\\.") == FALSE ~ V5,
+                             stringr::str_detect(V6, "\\d+") == TRUE &
+                               stringr::str_detect(V6, "\\.") == FALSE ~ V6,
+                             stringr::str_detect(V7, "\\d+") == TRUE &
+                               stringr::str_detect(V7, "\\.") == FALSE ~ V7,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(Reaction_Time = dplyr::case_when(stringr::str_detect(V6, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V6,
+                                                                        stringr::str_detect(V7, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V7,
+                                                                        stringr::str_detect(V8, "[\\+|\\-]\\d\\.\\d{2}") == TRUE ~ V8,
+                                                                        TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Split_1 = dplyr::case_when(V5 == Points & V4 == Finals_Time &
+                                                                    stringr::str_detect(V6, Time_Score_String) == TRUE ~ V6,
+                                                                  TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Split_2 = dplyr::case_when(V5 == Points & V4 == Finals_Time &
+                                                                    V6 == Split_1 &
+                                                                    stringr::str_detect(V7, Time_Score_String) == TRUE ~ V7,
+                                                                  TRUE ~ "Unknown")) %>%
+                         dplyr::select(Place = V1,
+                                       Name = V2,
+                                       Age,
+                                       Team,
+                                       Prelims_Time,
+                                       Finals_Time,
+                                       Points,
+                                       Reaction_Time,
+                                       Split_1,
+                                       Split_2,
+                                       Row_Numb = V8)
+                       )
+    } else {
+      df_8 <- data.frame(Row_Numb = character(),
+                         stringsAsFactors = FALSE)
+    }
+
+    #### seven variables ####
+    if (length(data_length_7) > 0) {
+      suppressWarnings(df_7 <- data_length_7 %>%
+                         list_transform() %>%
+                         dplyr::mutate(Age = dplyr::case_when(stringr::str_detect(V3, "\\d\\d") == TRUE &
+                                                                stringr::str_detect(V3, "[:alpha:]|\\.") == FALSE ~ V3,
+                                                              TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Team = dplyr::case_when(stringr::str_detect(V3, Age) == TRUE ~ V4,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V3,
+                                                               stringr::str_detect(V4, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, "[:alpha:]") == TRUE ~ V4,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, "^[:upper:]+$") == TRUE ~ V3,
+                                                               TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(
+                           Finals_Time = dplyr::case_when(
+                             str_detect(V4, Time_Score_Specials_String) == TRUE ~ V4,
+                             stringr::str_detect(V4, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V5, Time_Score_Specials_String) == TRUE ~ V5,
+                             stringr::str_detect(V6, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V7, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V5, Time_Score_Specials_String) == FALSE ~ V6,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(
+                           Points = dplyr::case_when(
+                             stringr::str_detect(V5, "\\d+") == TRUE &
+                               stringr::str_detect(V5, "\\.") == FALSE ~ V5,
+                             stringr::str_detect(V6, "\\d+") == TRUE &
+                               stringr::str_detect(V6, "\\.") == FALSE ~ V6,
+                             stringr::str_detect(V7, "\\d+") == TRUE &
+                               stringr::str_detect(V7, "\\.") == FALSE ~ V7,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(Split_1 = dplyr::case_when(V5 == Points & V4 == Finals_Time &
+                                                                    stringr::str_detect(V6, Time_Score_String) == TRUE ~ V6,
+                                                                  TRUE ~ "Unknown")) %>%
+                         dplyr::select(
+                           Place = V1,
+                           Name = V2,
+                           Age,
+                           Team,
+                           Finals_Time,
+                           Points,
+                           Split_1,
+                           Row_Numb = V7
+                         )
+                       )
+    } else {
+      df_7 <- data.frame(Row_Numb = character(),
+                         stringsAsFactors = FALSE)
+    }
+
+    #### six variables ####
+    if (length(data_length_6) > 0) {
+      suppressWarnings(df_6 <- data_length_6 %>%
+                         list_transform() %>%
+                         dplyr::mutate(Name = dplyr::case_when(V2 == V3 ~ "Unknown",
+                                                               TRUE ~ V2)) %>%
+                         dplyr::mutate(Age = dplyr::case_when(stringr::str_detect(V3, "\\d\\d") == TRUE &
+                                                                stringr::str_detect(V3, "[:alpha:]|\\.") == FALSE ~ V3,
+                                                              TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Team = dplyr::case_when(stringr::str_detect(V3, Age) == TRUE ~ V4,
+                                                               stringr::str_detect(V3, "^\\d\\s?") == TRUE ~ V4,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V3,
+                                                               TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(
+                           Prelims_Time = dplyr::case_when(
+                             stringr::str_detect(V4, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V5, Time_Score_Specials_String) == TRUE &
+                               stringr::str_detect(V3, Time_Score_Specials_String) == FALSE ~ V4,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(
+                           Finals_Time = dplyr::case_when(
+                             stringr::str_detect(V4, Time_Score_Specials_String) == TRUE & V4 != Prelims_Time ~ V4,
+                             stringr::str_detect(V5, Time_Score_Specials_String) == TRUE & V4 == Prelims_Time ~ V5,
+                             stringr::str_detect(V4, Time_Score_Specials_String) == FALSE &
+                               stringr::str_detect(V5, Time_Score_Specials_String) == TRUE ~ V5,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::mutate(
+                           Points = dplyr::case_when(
+                             stringr::str_detect(V5, "\\d+") == TRUE &
+                               stringr::str_detect(V5, "\\.") == FALSE ~ V5,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+                         dplyr::select(
+                           Place = V1,
+                           Name,
+                           Age,
+                           Team,
+                           Prelims_Time,
+                           Finals_Time,
+                           Points,
+                           Row_Numb = V6
+                         )
+                         )
+    } else {
+      df_6 <- data.frame(Row_Numb = character(),
+                         stringsAsFactors = FALSE)
+    }
+
+    #### five variables ####
+    if (length(data_length_5) > 0) {
+      suppressWarnings(df_5 <- data_length_5 %>%
+                         list_transform() %>%
+                         dplyr::mutate(Name = dplyr::case_when(stringr::str_detect(V2, Name_String) == TRUE ~ V2,
+                                                               TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Age = dplyr::case_when(stringr::str_detect(V3, "\\d\\d") == TRUE &
+                                                                stringr::str_detect(V3, "[:alpha:]|\\.") == FALSE ~ V3,
+                                                              TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Team = dplyr::case_when(stringr::str_detect(V3, Age) == TRUE ~ V4,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V3,
+                                                               TRUE ~ "Unknown")) %>%
+                           dplyr::mutate(
+                             Finals_Time = dplyr::case_when(
+                               stringr::str_detect(V3, Time_Score_Specials_String) == TRUE ~ V3,
+                               stringr::str_detect(V4, Time_Score_Specials_String) == TRUE ~ V4,
+                               stringr::str_detect(V4, Time_Score_Specials_String) == FALSE &
+                                 stringr::str_detect(V5, Time_Score_Specials_String) == TRUE ~ V5,
+                               TRUE ~ "Unknown"
+                             )
+                           ) %>%
+                         dplyr::select(Place = V1,
+                                       Name,
+                                       Age,
+                                       Team,
+                                       Finals_Time,
+                                       Row_Numb = V5) %>%
+                         dplyr::filter(stringr::str_detect(Team, Time_Score_Specials_String) == FALSE)
+                       )
+    } else {
+      df_5 <- data.frame(Row_Numb = character(),
+                         stringsAsFactors = FALSE)
+    }
+
+    #### four variables ####
+    if (length(data_length_4) > 0) {
+      suppressWarnings(df_4 <- data_length_4 %>%
+                         list_transform() %>%
+                         dplyr::mutate(Name = dplyr::case_when(stringr::str_detect(V2, Name_String) == TRUE ~ V2,
+                                                               TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(Team = dplyr::case_when(stringr::str_detect(V2, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V3, Time_Score_Specials_String) == TRUE ~ V2,
+                                                               stringr::str_detect(V3, "[:alpha:]") == TRUE &
+                                                                 stringr::str_detect(V3, Time_Score_Specials_String) == FALSE ~ V3,
+                                                               TRUE ~ "Unknown")) %>%
+                         dplyr::mutate(
+                           Finals_Time = dplyr::case_when(
+                             stringr::str_detect(V3, Time_Score_Specials_String) == TRUE ~ V3,
+                             TRUE ~ "Unknown"
+                           )
+                         ) %>%
+
+                         dplyr::select(Place = V1,
+                                       Name,
+                                       Team,
+                                       Finals_Time,
+                                       Row_Numb = V4) %>%
+        dplyr::filter(stringr::str_detect(Team, Time_Score_Specials_String) == FALSE)
+      )
+
+    } else {
+      df_4 <- data.frame(Row_Numb = character(),
+                         stringsAsFactors = FALSE)
+    }
+
+
+    #### Rejoin data frames from each number of variables ####
+    Min_Row_Numb <- min(events$Event_Row_Min)
+    suppressWarnings(
+      data <- dplyr::bind_rows(df_12, df_11) %>%
+        dplyr::bind_rows(df_10) %>%
+        dplyr::bind_rows(df_9) %>%
+        dplyr::bind_rows(df_8) %>%
+        dplyr::bind_rows(df_7) %>%
+        dplyr::bind_rows(df_6) %>%
+        dplyr::bind_rows(df_5) %>%
+        dplyr::bind_rows(df_4) %>%
+        dplyr::mutate(Row_Numb = as.numeric(Row_Numb)) %>%
+        dplyr::arrange(Row_Numb)
+    )
+
+    if("Prelims_Time" %in% names(data) == FALSE){
+      data$Prelims_Time <- "Unknown"
+    }
+
+
+    #### Clean Up Data ####
+    data <- data %>%
+      dplyr::mutate(DQ = dplyr::case_when(stringr::str_detect(Place, "DSQ|DNS|DFS") == TRUE ~ 1,
+                                          TRUE ~ 0)) %>%
+      dplyr::mutate(Place = str_remove(Place, "\\.")) %>%
+      dplyr::mutate(Age = dplyr::case_when(Age == "Unknown" &
+                                             stringr::str_detect(Team, "/\\d\\d$") == TRUE ~ stringr::str_extract(Team, "\\d\\d$"),
+                                           TRUE ~ Age)) %>%
+      dplyr::mutate(Team = stringr::str_remove(Team, "/\\d{1,}/\\d{1,}$")) %>%
+      dplyr::mutate(Prelims_Time = dplyr::case_when(stringr::str_detect(Place, "DNS") == TRUE &
+                                                      stringr::str_detect(Finals_Time, Time_Score_String) == TRUE &
+                                                      is.na(Prelims_Time) == TRUE ~ Finals_Time,
+                                                    TRUE ~ Prelims_Time)) %>%
+      dplyr::mutate(Finals_Time = dplyr::case_when(stringr::str_detect(Place, "DNS") == TRUE &
+                                                      stringr::str_detect(Finals_Time, Prelims_Time) == TRUE ~ "Unknown",
+                                                    TRUE ~ Finals_Time)) %>%
+      dplyr::mutate(Place = dplyr::case_when(stringr::str_detect(Place, "DSQ|DNS|DFS") == TRUE ~ "Unknown",
+                                      TRUE ~ Place)) %>%
+      dplyr::mutate(Place = dplyr::case_when(stringr::str_detect(Place, "999") == TRUE ~ dplyr::lag(Place),
+                                      TRUE ~ Place)) %>%
+      # run twice in case of three way tie
+      dplyr::mutate(Place = dplyr::case_when(stringr::str_detect(Place, "999") == TRUE ~ dplyr::lag(Place),
+                                             TRUE ~ Place))
+
+    data <- data %>%
+      dplyr::na_if("Unknown") %>%
+      dplyr::mutate(Finals_Time = stringr::str_remove(Finals_Time, "[:alpha:]{1,}")) %>%
+      dplyr::mutate(Finals_Time = stringr::str_remove(Finals_Time, "\\?|\\*"))
+
+    #### add in events based on row number ranges ####
+    if(min(data$Row_Numb) < min(events$Event_Row_Min)){
+      unknown_event <- data.frame(Event = "Event Unknown",
+                                  Event_Row_Min = min(data$Row_Numb),
+                                  Event_Row_Max = min(events$Event_Row_Min) - 1)
+      events <- dplyr::bind_rows(unknown_event, events)
+    }
+
+    data  <-
+      transform(data, Event = events$Event[findInterval(Row_Numb, events$Event_Row_Min)])
+
+    data <- data %>%
+      mutate(Name = case_when(Team == Name &
+                                stringr::str_detect(Event, "elay|\\sx\\s") == TRUE ~ "Unknown",
+                              TRUE ~ Name)) %>%
+      mutate(Team = case_when(Team == Name &
+                                stringr::str_detect(Event, "elay|\\sx\\s") == FALSE ~ "Unknown",
+                              TRUE ~ Team)) %>%
+      dplyr::na_if("Unknown")
+
+    #### adding relay swimmers in ####
+    if (relay_swimmers_splash == TRUE) {
+      relay_swimmers_df <- collect_relay_swimmers_splash(as_lines_list_2, relay_indent = Indent_Length)
+
+      relay_swimmers_df <-
+        transform(relay_swimmers_df, Row_Numb_Adjusted = data$Row_Numb[findInterval(Row_Numb, data$Row_Numb)]) %>%
+        dplyr::select(-Row_Numb)
+
+      data <- data %>%
+        dplyr::left_join(relay_swimmers_df, c("Row_Numb" = "Row_Numb_Adjusted"))
+    }
+
+    #### adding splits back in ####
+    if (splits == TRUE) {
+
+      data <- data %>%
+        dplyr::mutate(dplyr::across(where(is.numeric), as.character))
+
+      #### rename existing splits columns ####
+      if(any(stringr::str_detect(names(data), "Split")) == TRUE){
+        old_names <- names(data)[grep("^Split", names(data))]
+        new_names <-
+          paste("Split", seq(1, length(old_names)) * split_length_splash, sep = "_")
+
+        data <- data %>%
+          dplyr::rename_at(dplyr::vars(dplyr::all_of(old_names)), ~ new_names)
+      }
+
+      data_ind <- data %>%
+        dplyr::filter(stringr::str_detect(Event, "(R|r)elay|\\sx\\s|\\dx\\d") == FALSE)
+
+      data_relay <- data %>%
+        dplyr::filter(stringr::str_detect(Event, "(R|r)elay|\\sx\\s|\\dx\\d") == TRUE)
+
+      if(nrow(data_ind) > 0) {
+
+        # split_length <- 50
+        splits_df <-
+          splits_parse_splash(raw_results = as_lines_list_2)
+
+
+        #### matches row numbers in splits_df to available row numbers in data
+        # helps a lot with relays, since their row numbers vary based on whether or not relay swimmers are included
+        # and if those swimmers are listed on one line or two
+        splits_df  <-
+          transform(splits_df, Row_Numb_Adjusted = data_ind$Row_Numb[findInterval(Row_Numb, as.numeric(data_ind$Row_Numb))]) %>%
+          dplyr::mutate(Row_Numb_Adjusted = as.character(Row_Numb_Adjusted)) %>%
+          dplyr::select(-Row_Numb) %>%
+          dplyr::relocate(Row_Numb = Row_Numb_Adjusted)
+
+        suppressMessages(
+        data_ind <- data_ind %>%
+          dplyr::left_join(splits_df, by = "Row_Numb", suffix = c(".x", ".y")) %>%
+          coalesce_many() %>%
+          dplyr::mutate(dplyr::across(dplyr::starts_with("Split"), format, nsmall = 2)) %>%
+          dplyr::mutate(dplyr::across(where(is.numeric), as.character)) %>%
+          dplyr::mutate(dplyr::across(where(is.character), trimws)) %>%
+          dplyr::na_if("NA")
+        )
+      }
+
+      if(nrow(data_relay) > 0){
+        splits_df <-
+          splits_parse_splash_relays(as_lines_list_2, split_len = split_length_splash) %>%
+          dplyr::filter(Row_Numb %in% data_relay$Row_Numb)
+
+        #### matches row numbers in splits_df to available row numbers in data
+        # helps a lot with relays, since their row numbers vary based on whether or not relay swimmers are included
+        # and if those swimmers are listed on one line or two
+        splits_df  <-
+          transform(splits_df, Row_Numb_Adjusted = data_relay$Row_Numb[findInterval(Row_Numb, as.numeric(data_relay$Row_Numb))]) %>%
+          dplyr::mutate(Row_Numb_Adjusted = as.character(Row_Numb_Adjusted)) %>%
+          dplyr::select(-Row_Numb) %>%
+          dplyr::relocate(Row_Numb = Row_Numb_Adjusted)
+
+        suppressMessages(
+        data_relay <- data_relay %>%
+          dplyr::left_join(splits_df, by = "Row_Numb") %>%
+          coalesce_many() %>%
+          dplyr::na_if(10000) %>%
+          dplyr::mutate(dplyr::across(dplyr::starts_with("Split"), format, nsmall = 2)) %>%
+          dplyr::mutate(dplyr::across(where(is.numeric), as.character)) %>%
+          dplyr::mutate(dplyr::across(where(is.character), trimws)) %>%
+          dplyr::na_if("NA")
+        )
+      }
+
+
+      data <- data_ind %>%
+        dplyr::bind_rows(data_relay) %>%
+        dplyr::arrange(as.numeric(Row_Numb)) %>%
+        dplyr::select(!dplyr::starts_with("Split"),
+                      stringr::str_sort(names(.), numeric = TRUE)) # keep splits columns in order
+
+    } else {
+      data <- data %>%
+        dplyr::select(-dplyr::starts_with("Split"))
+    }
+
+    ### remove empty columns (all values are NA) ###
+    data <- Filter(function(x)
+      !all(is.na(x)), data)
+
+    #### if there is a Place column it should be first ####
+    if("Place" %in% names(data)){
+      data <- data %>%
+        dplyr::select(Place, dplyr::everything())
+    }
+
+
+    data$Row_Numb <- NULL
+    row.names(data) <- NULL
+
+    return(data)
+    }
+
+  }
+

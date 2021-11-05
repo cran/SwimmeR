@@ -11,11 +11,20 @@
 #' @importFrom dplyr select
 #' @importFrom dplyr n
 #' @importFrom dplyr arrange
+#' @importFrom dplyr relocate
+#' @importFrom dplyr select
+#' @importFrom dplyr across
+#' @importFrom dplyr summarise
+#' @importFrom dplyr starts_with
+#' @importFrom dplyr ungroup
 #' @importFrom stats reshape
 #'
 #' @param x a list of character strings including performances, with tow numbers
 #'   added by \code{add_row_numbers}
 #' @param min_row the lowest row number
+#' @param to_wide should the data frame x be converted to wide format?  Default
+#'   is \code{TRUE} as used in Hytek and Omega results.  Use \code{FALSE} in
+#'   Splash results
 #' @return a data frame with \code{Row_Numb} as the first column.  Other columns
 #'   are performance elements, like splits or relay swimmers, both in order of
 #'   occurrence left to right
@@ -23,7 +32,16 @@
 #' @seealso \code{lines_sort} is a helper function inside \code{splits_parse}
 #'   and \code{swim_parse_ISL}
 
-lines_sort <- function(x, min_row = minimum_row) {
+lines_sort <- function(x, min_row = minimum_row, to_wide = TRUE) {
+
+  #### testing ####
+  # x <- data_splits
+  # min_row <- 13
+  # to_wide <- FALSE
+
+
+  #### actual function ####
+
   min_row <- as.numeric(min_row)
 
   x <- x %>%
@@ -47,12 +65,31 @@ lines_sort <- function(x, min_row = minimum_row) {
 
     dplyr::select(-V1, -Row_Numb, -Row_Numb_2) %>%
     dplyr::mutate(row_index = 1:dplyr::n()) %>%
-    stats::reshape(direction = "wide",
-                   idvar = "Row_Fill",
-                   timevar = "row_index") %>%
-    fill_left()
+    dplyr::relocate(Row_Fill)
 
-  names(x)[1] <- "Row_Numb"
+  if (to_wide == TRUE) {
+    x <- x %>%
+      stats::reshape(direction = "wide",
+                     idvar = "Row_Fill",
+                     timevar = "row_index") %>%
+      fill_left()
+
+    names(x)[1] <- "Row_Numb"
+  }
+
+  if (to_wide == FALSE) {
+    x <- x %>%
+      dplyr::select(-row_index) %>%
+      dplyr::group_by(Row_Fill) %>%
+      dplyr::mutate(dplyr::across(dplyr::starts_with("Split"), ~ sec_format(.x))) %>%
+      dplyr::summarise(dplyr::across(dplyr::starts_with("Split"), ~ sum(.x, na.rm = TRUE))) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(dplyr::across(dplyr::starts_with("Split"), ~ mmss_format(.x))) %>%
+      dplyr::na_if("00.00") %>%
+      dplyr::rename("Row_Numb" = Row_Fill) %>%
+      dplyr::relocate(Row_Numb)
+
+  }
 
   return(x)
 }

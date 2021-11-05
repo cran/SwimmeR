@@ -22,7 +22,6 @@
 #' @importFrom stringr str_split_fixed
 #' @importFrom stringr str_detect
 #' @importFrom stringr str_extract
-#' @importFrom purrr map_lgl
 #' @importFrom purrr map
 #'
 #' @param file output from \code{read_results}
@@ -75,12 +74,12 @@ swim_parse_ISL <-
 
     #### clean input data ####
     suppressWarnings(
-      data_1 <- as_lines_list_2 %>%
+      data_cleaned <- as_lines_list_2 %>%
         stringr::str_replace_all("\\*(\\d{1,})", replacement = "\\1") %>%  # removes * placed in front of place number in ties
         .[purrr::map(., length) > 0] %>%
-        .[purrr::map_lgl(., stringr::str_detect, "\\d\\d\\.\\d\\d|DSQ|[:upper:]{2,}\\s[:upper:][:lower:]")] %>% # must have \\.\\d\\d because all swimming and diving times do
-        .[purrr::map_lgl(., stringr::str_detect, "Reaction Time", negate = TRUE)] %>% # removes header row
-        .[purrr::map_lgl(., stringr::str_detect, "[:alpha:]{2,}")] %>% # must have at least two letters in a row
+        .[stringr::str_detect(., "\\d\\d\\.\\d\\d|DSQ|[:upper:]{2,}\\s[:upper:][:lower:]")] %>% # must have \\.\\d\\d because all swimming and diving times do
+        .[stringr::str_detect(., "Reaction Time", negate = TRUE)] %>% # removes header row
+        .[stringr::str_detect(., "[:alpha:]{2,}")] %>% # must have at least two letters in a row
         stringr::str_remove_all("\n") %>%
         stringr::str_replace_all("(\\d|\\))\\s", "\\1   ") %>%
         stringr::str_replace_all("^\\s+(\\d)\\s{2,}\\d\\s{2,}(\\d)", "\\1    \\2") %>%
@@ -102,24 +101,30 @@ swim_parse_ISL <-
         trimws()
     )
 
+    #### if data_cleaned is empty ####
+    if(!length(data_cleaned) > 0){
+      message("No results found in file")
+
+    } else {
+
     #### splits data into variables by splitting at multiple (>= 2) spaces ####
-    data_1 <-
-      unlist(purrr::map(data_1, stringr::str_split, "\\s{2,}"),
+    data_cleaned <-
+      unlist(purrr::map(data_cleaned, stringr::str_split, "\\s{2,}"),
              recursive = FALSE)
 
     #### breaks data into subsets based on swim type ####
     is_digit <-
-      purrr::map(data_1, stringr::str_detect, "^\\d") # is first element of list a digit - no for relay swimmers, yes for everyone else
+      purrr::map(data_cleaned, stringr::str_detect, "^\\d") # is first element of list a digit - no for relay swimmers, yes for everyone else
 
     if(relay_swimmers == TRUE){
     data_relay_swimmer <-
-      data_1[purrr::map(is_digit, 1) == FALSE] # pull out relay swimmers
+      data_cleaned[purrr::map(is_digit, 1) == FALSE] # pull out relay swimmers
     } else {
       data_relay_swimmer <- NULL
     }
 
     data_entry <-
-      data_1[purrr::map(is_digit, 1) == TRUE] # all entries (ie not relay swimmers, which are a kind of sub entry)
+      data_cleaned[purrr::map(is_digit, 1) == TRUE] # all entries (ie not relay swimmers, which are a kind of sub entry)
 
     #### ind swimmer list ####
     suppressWarnings(data_ind_swimmer <-
@@ -146,7 +151,7 @@ swim_parse_ISL <-
 
     #### DQ swimmer list ####
     suppressWarnings(data_DSQ <-
-                       data_1[stringr::str_detect(data_1, "(DSQ)|(DNS)") == TRUE]) # pull out DQ swimmers, called DSQ by ISL
+                       data_cleaned[stringr::str_detect(data_cleaned, "(DSQ)|(DNS)") == TRUE]) # pull out DQ swimmers, called DSQ by ISL
 
     #### individual swimmers df ####
     if (length(data_ind_swimmer) > 0) {
@@ -164,18 +169,18 @@ swim_parse_ISL <-
 
       df_right <- right_side %>%
         list_transform() %>%
-        dplyr::rename("Time" = V1,
+        dplyr::rename("Finals_Time" = V1,
                       "Points" = V2,
                       "Row_Numb" = V3)
 
       df_ind_swimmer <- dplyr::bind_cols(df_left, df_right) %>%
         dplyr::mutate(
-          Time = dplyr::case_when(
+          Finals_Time = dplyr::case_when(
             stringr::str_detect(Points, "\\d{2}\\.\\d{2}") == TRUE ~ Points,
-            TRUE ~ Time
+            TRUE ~ Finals_Time
           ),
           Points = dplyr::case_when(
-            Time == Points ~ "NA",
+            Finals_Time == Points ~ "NA",
             str_detect(Points, "\\d{2}\\.\\d{2}") == TRUE ~ "NA",
             TRUE ~ Points
           )
@@ -201,7 +206,7 @@ swim_parse_ISL <-
             "Place" = V1,
             "Lane" = V2,
             "Team" = V3,
-            "Time" = V4,
+            "Finals_Time" = V4,
             "Row_Numb" = V5
           )
       } else {
@@ -210,7 +215,7 @@ swim_parse_ISL <-
             "Place" = V1,
             "Lane" = V2,
             "Team" = V3,
-            "Time" = V4,
+            "Finals_Time" = V4,
             "Points" = V5,
             "Row_Numb" = V6
           )
@@ -270,7 +275,7 @@ swim_parse_ISL <-
     #         dplyr::rename(
     #           "Lane" = V1,
     #           "Team" = V2,
-    #           "Time" = V3,
+    #           "Finals_Time" = V3,
     #           "Row_Numb" = V4
     #         )
     #
@@ -290,7 +295,7 @@ swim_parse_ISL <-
         dplyr::mutate(Team = dplyr::case_when(stringr::str_detect(V3, "DSQ") == TRUE ~ V2,
                                               TRUE ~ V3)) %>%
         dplyr::mutate(
-          Time = dplyr::case_when(
+          Finals_Time = dplyr::case_when(
             stringr::str_detect(V3, "DSQ") == TRUE ~ V3,
             stringr::str_detect(V4, "DSQ") == TRUE ~ V4
           )
@@ -298,7 +303,7 @@ swim_parse_ISL <-
         dplyr::mutate(Points = dplyr::case_when(stringr::str_detect(V3, "DSQ") == TRUE ~ V4,
                                                 TRUE ~ "NA")) %>%
         dplyr::na_if("NA") %>%
-        dplyr::select(Lane, Name, Team, Time, Row_Numb)
+        dplyr::select(Lane, Name, Team, Finals_Time, Row_Numb)
 
     } else {
       df_DSQ_5 <- data.frame(Row_Numb = character(),
@@ -312,7 +317,7 @@ swim_parse_ISL <-
             "Lane" = V1,
             "Name" = V2,
             "Team" = V3,
-            "Time" = V4,
+            "Finals_Time" = V4,
             "Points" = V5,
             "Row_Numb" = V6
           )
@@ -364,8 +369,8 @@ swim_parse_ISL <-
         dplyr::mutate(Points = dplyr::case_when(Points == "-" ~ "0",
                                                 Points != "-" ~ Points)) %>%
         ### deal with DQs ###
-        dplyr::mutate(DQ = case_when(Time == "DSQ" ~ 1,
-                                     Time == "DNS" ~ 1,
+        dplyr::mutate(DQ = case_when(Finals_Time == "DSQ" ~ 1,
+                                     Finals_Time == "DNS" ~ 1,
                                      TRUE ~ 0)) %>%
         dplyr::na_if("DSQ") %>%
         ### clean up relay names ###
@@ -383,12 +388,12 @@ swim_parse_ISL <-
 
     if(relay_swimmers == TRUE){
     data <- data %>%
-      dplyr::select(Row_Numb, Place, Lane, Name, Team, Time, Event, Points, DQ, Relay_Swimmer_1, Relay_Swimmer_2, Relay_Swimmer_3, Relay_Swimmer_4)
+      dplyr::select(Row_Numb, Place, Lane, Name, Team, Finals_Time, Event, Points, DQ, Relay_Swimmer_1, Relay_Swimmer_2, Relay_Swimmer_3, Relay_Swimmer_4)
     # data <- data %>%
     #   filter(is.na(Relay_Swimmer_1) & str_detect(Event, "\\d\\s?x\\s?\\d"))
     } else {
       data <- data %>%
-        dplyr::select(Row_Numb, Place, Lane, Name, Team, Time, Event, Points, DQ)
+        dplyr::select(Row_Numb, Place, Lane, Name, Team, Finals_Time, Event, Points, DQ)
     }
 
     #### adding splits back in ####
@@ -403,7 +408,7 @@ swim_parse_ISL <-
         dplyr::mutate(Split_50 = as.numeric(Split_50)) %>%
         dplyr::rowwise() %>%
         dplyr::mutate(Split_50 = dplyr::case_when(is.na(Split_100) == FALSE & str_detect(Event, "\\d\\s?x\\s?\\d") == FALSE ~ round(
-          sec_format(Time) - sum(as.numeric(
+          sec_format(Finals_Time) - sum(as.numeric(
             c(
               Split_100,
               Split_150,
@@ -427,6 +432,7 @@ swim_parse_ISL <-
 
     data$Row_Numb <- NULL
     return(data)
+    }
   }
 
 #' @rdname swim_parse_ISL
