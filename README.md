@@ -6,7 +6,7 @@
 [![](http://cranlogs.r-pkg.org/badges/SwimmeR?color=blue)](https://cran.r-project.org/package=SwimmeR)
 [![](http://cranlogs.r-pkg.org/badges/last-week/SwimmeR?color=blue)](https://cran.r-project.org/package=SwimmeR)
 
-`SwimmeR` is intended to assist those working with times from competitive pool swimming races, such as those conducted under the NHFS, NCAA, or FINA.  For more information please see `vignette("SwimmeR")`.
+`SwimmeR` is intended to assist those working with times from competitive pool swimming races, such as those conducted under the NHFS, NCAA, ISL, or FINA rules.  For more information please see `vignette("SwimmeR")`.
 
 ### Latest Released Version from CRAN
 
@@ -15,11 +15,14 @@
 `library(SwimmeR)`
 
 ### Latest Development Version from Github
+Version 0.14.2
 
-Version 0.13.0
-
-* Splash results improving, now include relay swimmers, splits
-* various speed improvements
+* function `make_lineup` will take two data frames containing athlete/event/time combinations (one for each team) and create a lineup maximizing returns for one team
+* `swim_parse` handles some Hytek psych sheets (single column only)
+* `read_results` now handles both pdf and html results at .aspx addresses
+* `swim_parse` handles Hytek Top Times reports via `toptimes_parse_hytek`.  Still under development.
+* new function `place` supersedes `swim_place` and `dive_place`, handling both swimming and diving
+*  *major change* `swim_parse` output columns `Finals_Time` and `Prelims_Time` have been renamed `Finals` and `Prelims`
 
 `devtools::install_github("gpilgrim2670/SwimmeR", build_vignettes = TRUE)`
 
@@ -80,7 +83,7 @@ swim_parse_ISL(
 
 `Place`: Order of finish
 
-`Name`: An athlete's name.  Relays do not have ages
+`Name`: An athlete's name.  Relays do not have names.
 
 `Age`: Could be a number of years (25) or a year in school (SR)
 
@@ -92,9 +95,9 @@ swim_parse_ISL(
 
 `Finals_Time`: If two times/scores are listed this is the second one.  If only one time/score is listed this is it.
 
-`DQ`: Was an athlete/relay team disqualified
+`DQ`: Was an athlete/relay team disqualified (1) or not (0)
 
-`Exhibition`: Was an athlete/relay team competing as a non-scoring (exhibition) entry
+`Exhibition`: Was an athlete/relay team competing as a non-scoring (exhibition) entry (1) or not (0)
 
 `Points`: Points award based on place (not diving score)
 

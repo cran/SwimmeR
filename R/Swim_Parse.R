@@ -7,7 +7,6 @@
 #' @importFrom dplyr mutate
 #' @importFrom dplyr lag
 #' @importFrom dplyr case_when
-#' @importFrom dplyr na_if
 #' @importFrom dplyr select
 #' @importFrom dplyr arrange
 #' @importFrom dplyr filter
@@ -43,7 +42,7 @@
 #'   could pass "Central High School" (one space between "Central" and "High")
 #'   and "Texas" to \code{replacement} fix the issues described in \code{typo}
 #' @param format_results should the results be formatted for analysis (special
-#'   strings like \code{"DQ"} replaced with \code{NA}, \code{Finals_Time} as
+#'   strings like \code{"DQ"} replaced with \code{NA}, \code{Finals} as
 #'   definitive column)?  Default is \code{TRUE}
 #' @param splits either \code{TRUE} or the default, \code{FALSE} - should
 #'   \code{swim_parse} attempt to include splits.
@@ -55,9 +54,9 @@
 #'   should relay swimmers be reported.  Relay swimmers are reported in separate
 #'   columns named \code{Relay_Swimmer_1} etc.
 #' @return returns a data frame with columns \code{Name}, \code{Place},
-#'   \code{Age}, \code{Team}, \code{Prelims_Time}, \code{Finals_Time},
+#'   \code{Age}, \code{Team}, \code{Prelims}, \code{Finals},
 #'   \code{Points}, \code{Event} & \code{DQ}.  Note all swims will have a
-#'   \code{Finals_Time}, even if that time was actually swam in the prelims
+#'   \code{Finals}, even if that time was actually swam in the prelims
 #'   (i.e. a swimmer did not qualify for finals).  This is so that final results
 #'   for an event can be generated from just one column.
 #'
@@ -92,6 +91,9 @@ Swim_Parse <-
 #     "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Splash/Glenmark_Senior_Nationals_2019.pdf"
 #   )
 #
+
+# file <-
+#       read_results(system.file("extdata", "2018_jimi_flowers_PARA.pdf", package = "SwimmeR"))
 # avoid = avoid_default
 # typo = typo_default
 # replacement = replacement_default
@@ -110,11 +112,11 @@ Swim_Parse <-
       stop("typo and replacement must have the same number of elements (be the same length)")
     }
 
-    if(any(!is.logical(format_results) & is.na(format_results)) == TRUE) {
+    if(any(!is.logical(format_results), is.na(format_results)) == TRUE) {
       stop("format_results must be logical, either TRUE or FALSE")
     }
 
-    if(any(!is.logical(splits) & is.na(splits)) == TRUE) {
+    if(any(!is.logical(splits), is.na(splits)) == TRUE) {
       stop("splits must be logical, either TRUE or FALSE")
     }
 
@@ -122,7 +124,7 @@ Swim_Parse <-
       stop("split_length must be numeric, usually 50 or 25")
     }
 
-    if(any(!is.logical(relay_swimmers) & is.na(relay_swimmers)) == TRUE) {
+    if(any(!is.logical(relay_swimmers), is.na(relay_swimmers)) == TRUE) {
       stop("relay_swimmers must be logical, either TRUE or FALSE")
     }
 
@@ -171,17 +173,22 @@ Swim_Parse <-
     #   options("age_team_warning_0.6.0" = FALSE)
     # }
 
+
     if(stringr::str_detect(file[1], "^read_results_flag$") == TRUE){
 
       # remove read_results flag
 
       file <- file[-1]
 
-    } else{
+    } else {
 
       # if read_results flag isn't present post an error
 
       stop("Please run read_results on file prior to running swim_parse.")
+    }
+
+    if(length(file) <= 1){
+      stop("No results found.  Please check source.")
     }
 
     if (stringr::str_detect(file[1], "^A107") == TRUE) { # for .hy3 files
@@ -189,7 +196,10 @@ Swim_Parse <-
       data <- hy3_parse(file = file)
       return(data)
 
-    } else if (any(stringr::str_detect(file[1:6], "S\\.A\\.M\\.M\\.S\\.|MEET SANCTION NUMBER")) == TRUE) { # for S.A.M.M.S files
+    } else if (any(stringr::str_detect(file[1:6], "S\\.A\\.M\\.M\\.S\\.|MEET SANCTION NUMBER")) == TRUE) {
+
+      #### S.A.M.M.S. ####
+
       data <- swim_parse_samms(file_samms = file,
                           avoid_samms = avoid_non_splash,
                           typo_samms = typo,
@@ -197,38 +207,14 @@ Swim_Parse <-
                           format_samms = format_results)
       return(data)
 
-    } else if (any(stringr::str_detect(file[1:6], "( ISL )|(^ISL )")) == TRUE) {
-
-      data <- swim_parse_ISL(
-        file = file,
-        splits = splits,
-        relay_swimmers = relay_swimmers
-      )
-
-      return(data)
-
-
-    } else if (any(stringr::str_detect(file, "(Official Timekeeping by Omega)|(Report created )")) == TRUE) {
-
-      data <- swim_parse_omega(
-        file_omega = file,
-        avoid_omega = avoid_non_splash,
-        typo_omega = typo,
-        replacement_omega = replacement,
-        splits = splits,
-        split_length_omega = split_length,
-        relay_swimmers_omega = relay_swimmers
-      )
-
-      return(data)
-
     } else if (any(stringr::str_detect(file, "Splash Meet Manager"))) {
+
+      #### Splash Meet Results ####
 
       avoid_default_splash <-
         c(
           "abcxyz"
         )
-
 
       avoid_splash <- unique(c(avoid, avoid_default_splash))
 
@@ -244,7 +230,56 @@ Swim_Parse <-
 
       return(data)
 
-    } else { # hytek files
+    } else if (any(
+      stringr::str_detect(file[1:6], "( ISL )|(^ISL )"),
+      stringr::str_detect(
+        file,
+        "Cali Condors|LA Current|Energy Standard|DC Trident|Aqua Centurions|London Roar"
+      )
+    ) == TRUE) {
+
+      #### ISL ####
+
+      data <- swim_parse_ISL(
+        file = file,
+        splits = splits,
+        relay_swimmers = relay_swimmers
+      )
+
+      return(data)
+
+    } else if (any(stringr::str_detect(file, "(Official Timekeeping by Omega)|(Report created )")) == TRUE) {
+
+      #### Omega Files ####
+
+      data <- swim_parse_omega(
+        file_omega = file,
+        avoid_omega = avoid_non_splash,
+        typo_omega = typo,
+        replacement_omega = replacement,
+        splits = splits,
+        split_length_omega = split_length,
+        relay_swimmers_omega = relay_swimmers
+      )
+
+      return(data)
+
+    } else if(any(stringr::str_detect(file[1:10], "Top Times")) == TRUE) {
+
+      #### Hytek Top Times ####
+
+      data <- toptimes_parse_hytek(
+        file_hytek_toptimes = file,
+        avoid_hytek_toptimes = avoid_non_splash,
+        typo_hytek_toptimes = typo,
+        replacement_hytek_toptimes = replacement
+      )
+
+      return(data)
+
+    } else {
+
+      #### Hytek Meet Results ####
 
       data <- swim_parse_hytek(
         file_hytek = file,

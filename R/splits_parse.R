@@ -30,6 +30,10 @@
 splits_parse <- function(text, split_len = split_length) {
 
   #### Testing ####
+  # text <-
+  #   read_results(system.file("extdata", "2018_jimi_flowers_PARA.pdf", package = "SwimmeR")) %>%
+  #   add_row_numbers()
+
   # text <- read_results("inst/extdata/jets08082019_067546.pdf")
   # text <- read_results("inst/extdata/11102019roc.pdf")
   # text <- read_results("inst/extdata/s2-results.pdf")
@@ -253,7 +257,7 @@ splits_parse <- function(text, split_len = split_length) {
           ~ dplyr::case_when(stringr::str_detect(., "qq") == FALSE ~ "NA",
                              TRUE ~ .)
         )) %>%
-        dplyr::na_if("NA") %>%
+        na_if_character("NA") %>%
         dplyr::mutate(dplyr::across(
           dplyr::everything(),
           ~ stringr::str_replace_all(., "qq", "")

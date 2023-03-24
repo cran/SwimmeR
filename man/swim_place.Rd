@@ -2,15 +2,38 @@
 % Please edit documentation in R/swim_place.R
 \name{swim_place}
 \alias{swim_place}
-\title{Adds places to swimming results}
+\title{Add places to swimming results}
 \usage{
-swim_place(df, max_place)
+swim_place(
+  df,
+  time_col = Finals,
+  max_place = NULL,
+  event_type = "ind",
+  max_relays_per_team = 1,
+  keep_nonscoring = TRUE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{df}{a data frame with results from \code{swim_parse}, including only
 swimming results (not diving)}
 
+\item{time_col}{the name of a column in \code{df} containing times on which
+to place (order) performances.  Default is \code{Finals}}
+
 \item{max_place}{highest place value that scores}
+
+\item{event_type}{either \code{"ind"} for individual or \code{"relay"} for
+relays}
+
+\item{max_relays_per_team}{an integer value denoting the number of relays a
+team may score (usually 1)}
+
+\item{keep_nonscoring}{are athletes in places greater than \code{max_place}
+be retained in the data frame.  Either \code{TRUE} or \code{FALSE}}
+
+\item{verbose}{should warning messages be posted.  Default is \code{TRUE} and
+should rarely be changed.}
 }
 \value{
 a data frame modified so that places have been appended based on
@@ -19,6 +42,25 @@ a data frame modified so that places have been appended based on
 \description{
 Places are awarded on the basis of time, with fastest (lowest) time winning.
 Ties are placed as ties (both athletes get 2nd etc.)
+}
+\examples{
+  df <- data.frame(Place = c(1, 1, 1),
+               Name = c("Sally Swimfast", "Bonnie Bubbles", "Kylie Kicker"),
+               Team = c("KVAC", "UBAM", "MERC"),
+               Event = rep("Women 200 Freestyle", 3),
+               Prelims = c("2:00.00", "1:59.99", "2:01.50"),
+               Finals = c("1:58.00", "1:59.50", "2:00.50"),
+               Meet = c("Summer 2021", "Fall 2020", "Champs 2020"))
+
+df \%>\%
+  swim_place()
+
+df \%>\%
+  swim_place(time_col = Prelims)
+
+df \%>\%
+  swim_place(time_col = "Prelims")
+
 }
 \seealso{
 \code{swim_place} is a helper function used inside of

@@ -19,16 +19,22 @@
 
 collect_relay_swimmers_omega <- function(x){
 
-  # x <- "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Paralympics2020/raw_files/PG2020_SWMX4X50MFR_10101_FNL.pdf" %>%
+  # x <- "https://raw.githubusercontent.com/gpilgrim2670/Pilgrim_Data/master/Tokyo2020/SWMX4X100MMD_FNL.pdf" %>%
   #   read_results() %>%
   #   add_row_numbers()
 
   # x <- as_lines_list_2
 
   relay_swimmer_string <- "^\n\\s*[:alpha:]"
-  record_string <- "\n\\s+[:upper:]R\\s|\n\\s+US\\s|[:upper:][:alpha:]+ Record|\n\\s+W[:upper:]\\s"
-  header_string <- "Record\\s+Split|Record\\s+Name|Reaction\\sTime|EVENT NO\\."
+  record_string <- "\n\\s+[:upper:]R\\s|\n\\s+US\\s|[:upper:][:alpha:]+ Record|\n\\s+W[:upper:]\\s|FINA\\s|BRONZE\\s{2,}|\\s+GOLD\\s{2,}|SILVER\\s{2,}|\n\\s?BRONZE|\n\\s?SILVER|\n\\s?GOLD"
+  header_string <- "Record\\s+Split|Record\\s+Name|Reaction\\sTime|EVENT NO\\.|Rank\\s+Name|Rank\\s+NAT|NAT Code|Total\\s+\\d+$|(Women)|(Men)|\\s{3,}F\\s+\\d+$|\\s{3,}M\\s+\\d+$"
 
+  # medallists_row <- stringr::str_extract(x, "Medallists\\s+\\d+$")
+  # if (length(medallists_row) > 0) {
+  #   medallists_row <- medallists_row[!is.na(medallists_row)]
+  #   medallists_row <-
+  #     as.numeric(stringr::str_extract(medallists_row[1], "\\d+"))
+  # }
 
   row_numbs_relay_swimmer <- x %>%
     .[stringr::str_detect(.,
@@ -41,7 +47,9 @@ collect_relay_swimmers_omega <- function(x){
                      record_string, negate = TRUE)] %>%
     .[stringr::str_detect(.,
                       header_string, negate = TRUE)] %>%
+    .[stringr::str_detect(., "protest", negate = TRUE)] %>%
     .[stringr::str_count(., "\\(") < 2] %>%
+    .[stringr::str_count(., "\\.") >= 1] %>%
     stringr::str_extract_all("\\d{1,}$")
 
   if (length(row_numbs_relay_swimmer) > 0) {
@@ -54,6 +62,7 @@ collect_relay_swimmers_omega <- function(x){
     suppressWarnings(
       data_1_relay_swimmer <- x %>%
         .[stringr::str_detect(., relay_rows)] %>%
+        .[stringr::str_detect(., "protest", negate = TRUE)] %>%
         stringr::str_remove_all("\n") %>%
         stringr::str_remove_all("(?<=\\d) [:upper:] ") %>%
         stringr::str_remove_all("(?<=[:alpha:])\\. ") %>%
@@ -63,6 +72,7 @@ collect_relay_swimmers_omega <- function(x){
         .[lengths(.) == 1] %>%
         .[stringr::str_detect(.,
                          "[:alpha:]\\s[:alpha:]")] %>%
+        # .[stringr::str_count(., "\\.") >= 1] %>%
         trimws()
     )
 
@@ -103,7 +113,7 @@ collect_relay_swimmers_omega <- function(x){
           "Relay_Swimmer_4" = V5,
           Row_Numb
         ) %>%
-        dplyr::na_if("NA")
+        na_if_character("NA")
 
     } else if(length(relay_swimmers_data) == 9) {
       if(stringr::str_detect(relay_swimmers_data$V3[1], "^SB?M?\\d{1,2}$") == TRUE){
@@ -119,7 +129,7 @@ collect_relay_swimmers_omega <- function(x){
           "Relay_Swimmer_4_Para" = V9,
           Row_Numb
         ) %>%
-        dplyr::na_if("NA")
+        na_if_character("NA")
       } else {
         relay_swimmers_data <- relay_swimmers_data %>%
           dplyr::select(
@@ -133,7 +143,7 @@ collect_relay_swimmers_omega <- function(x){
             "Relay_Swimmer_4_Gender" = V9,
             Row_Numb
           ) %>%
-          dplyr::na_if("NA")
+          na_if_character("NA")
       }
     } else if(length(relay_swimmers_data) == 13) {
       relay_swimmers_data <- relay_swimmers_data %>%
@@ -152,7 +162,7 @@ collect_relay_swimmers_omega <- function(x){
           'Relay_Swimmer_4_Para' = V13,
           Row_Numb
         ) %>%
-        dplyr::na_if("NA")
+        na_if_character("NA")
     }
 
   } else {
@@ -167,6 +177,11 @@ collect_relay_swimmers_omega <- function(x){
     dplyr::filter(stringr::str_detect(V2, " RECORD$") == FALSE) %>%
     dplyr::filter(stringr::str_detect(V2, " US Open Records ") == FALSE)
   }
+
+  # if(length(medallists_row) > 0){
+  #   relay_swimmers_data <- relay_swimmers_data %>%
+  #     filter(Row_Numb >= medallists_row)
+  # }
 
   if(nrow(relay_swimmers_data) < 1){
     relay_swimmers_data <- data.frame(Row_Numb = as.numeric())

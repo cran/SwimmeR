@@ -7,7 +7,6 @@
 #' @importFrom dplyr mutate
 #' @importFrom dplyr lead
 #' @importFrom dplyr case_when
-#' @importFrom dplyr na_if
 #' @importFrom dplyr select
 #' @importFrom dplyr arrange
 #' @importFrom dplyr left_join
@@ -43,9 +42,9 @@
 #'   could pass "Central High School" (one space between "Central" and "High")
 #'   and "Texas" to \code{replacement} fix the issues described in \code{typo}
 #' @return returns a data frame with columns \code{Name}, \code{Place},
-#'   \code{Age}, \code{Team}, \code{Prelims_Time}, \code{Finals_Time}, &
+#'   \code{Age}, \code{Team}, \code{Prelims}, \code{Finals}, &
 #'   \code{Event}.  May also contain \code{Seed_Time}, \code{USA_ID}, and/or
-#'   \code{Birthdate}.  Note all swims will have a \code{Finals_Time}, even if
+#'   \code{Birthdate}.  Note all swims will have a \code{Finals}, even if
 #'   that time was actually swam in the prelims (i.e. a swimmer did not qualify
 #'   for finals).  This is so that final results for an event can be generated
 #'   from just one column.
@@ -169,8 +168,8 @@ hy3_parse <-
         Row_Max = dplyr::lead(Row_Min, 1L, default = length(file) - 1),
         Row_Min = Row_Min - 0.1
       ) %>%
-      dplyr::mutate(Finals_Time = NA,
-                    Prelims_Time = NA) %>%
+      dplyr::mutate(Finals = NA,
+                    Prelims = NA) %>%
       dplyr::select(-ID,-Course) %>%
       dplyr::arrange(Row_Min)
 
@@ -197,43 +196,43 @@ hy3_parse <-
 
 
     suppressWarnings(entry <- entry %>%
-      dplyr::mutate(DQ = case_when(stringr::str_detect(Finals_Time, "Q") == TRUE ~ 1,
+      dplyr::mutate(DQ = case_when(stringr::str_detect(Finals, "Q") == TRUE ~ 1,
                                    TRUE ~ 0)) %>%
       dplyr::mutate(
         Seed_Time = stringr::str_remove(Seed_Time, "[A-Z]{1,}"),
-        Prelims_Time = stringr::str_remove(Prelims_Time, "[A-Z]{1,}"),
-        Finals_Time = stringr::str_remove(Finals_Time, "[A-Z]{1,}"),
+        Prelims = stringr::str_remove(Prelims, "[A-Z]{1,}"),
+        Finals = stringr::str_remove(Finals, "[A-Z]{1,}"),
       ) %>%
-      dplyr::na_if("0.00") %>%
+      na_if_character("0.00") %>%
       dplyr::mutate(Seed_Time = dplyr::case_when(is.na(Seed_Time) ~ "00.00",
                                           TRUE ~ Seed_Time),
-                    Prelims_Time = dplyr::case_when(is.na(Prelims_Time) ~ "00.00",
-                                             TRUE ~ Prelims_Time),
-                    Finals_Time = dplyr::case_when(is.na(Finals_Time) ~ "00.00",
-                                            TRUE ~ Finals_Time)) %>%
+                    Prelims = dplyr::case_when(is.na(Prelims) ~ "00.00",
+                                             TRUE ~ Prelims),
+                    Finals = dplyr::case_when(is.na(Finals) ~ "00.00",
+                                            TRUE ~ Finals)) %>%
       dplyr::mutate(
         Seed_Time = dplyr::case_when(
           stringr::str_detect(Event, "Diving") == FALSE ~ mmss_format(as.numeric(Seed_Time)),
           stringr::str_detect(Event, "Diving") == TRUE ~ Seed_Time,
           TRUE ~ "00.00"
         ),
-        Prelims_Time = dplyr::case_when(
-          stringr::str_detect(Event, "Diving") == FALSE ~ mmss_format(as.numeric(Prelims_Time)),
-          stringr::str_detect(Event, "Diving") == TRUE ~ Prelims_Time,
+        Prelims = dplyr::case_when(
+          stringr::str_detect(Event, "Diving") == FALSE ~ mmss_format(as.numeric(Prelims)),
+          stringr::str_detect(Event, "Diving") == TRUE ~ Prelims,
           TRUE ~ "00.00"
         ),
-        Finals_Time = dplyr::case_when(
-          stringr::str_detect(Event, "Diving") == FALSE ~ mmss_format(as.numeric(Finals_Time)),
-          stringr::str_detect(Event, "Diving") == TRUE ~ Finals_Time,
-          TRUE ~ Finals_Time
+        Finals = dplyr::case_when(
+          stringr::str_detect(Event, "Diving") == FALSE ~ mmss_format(as.numeric(Finals)),
+          stringr::str_detect(Event, "Diving") == TRUE ~ Finals,
+          TRUE ~ Finals
         )
       ) %>%
-      dplyr::na_if("00.00") %>%
+      na_if_character("00.00") %>%
       dplyr::mutate(Place = as.numeric(Finals_Place)) %>%
       dplyr::select(-Finals_Place) %>%
       dplyr::mutate(Place = dplyr::case_when(Place == 0 ~ 100000,
                                       TRUE ~ Place)) %>%
-      dplyr::na_if(100000))
+      na_if_numeric(100000))
 
     # data beginning with D1M contains swimmer info (M for male, F for female)
     swimmer <- file %>%
@@ -269,7 +268,7 @@ hy3_parse <-
 
     # works for CA results 11/12 - reenable when completing hy3 work
     # swimmer <- data.frame(swimmer, stringsAsFactors = FALSE) %>%
-    #   na_if("") %>%
+    #   na_if_character("") %>%
     #   fill_left()
 
     swimmer <- data.frame(swimmer, stringsAsFactors = FALSE)
@@ -381,7 +380,7 @@ hy3_parse <-
           TRUE ~ "NA"
         )
       ) %>%
-      dplyr::na_if("^NA$") %>%
+      na_if_character("^NA$") %>%
       dplyr::select(-X8,-X9)
 
     relay <- relay %>%
@@ -413,8 +412,8 @@ hy3_parse <-
         Row_Max = dplyr::lead(Row_Min, 1L, default = length(file) - 1),
         Row_Min = Row_Min - 0.1
       ) %>%
-      dplyr::mutate(Finals_Time = NA,
-                    Prelims_Time = NA) %>%
+      dplyr::mutate(Finals = NA,
+                    Prelims = NA) %>%
       dplyr::select(-Course,-Team,-Relay_Rank,-ID)
 
 
@@ -444,32 +443,32 @@ hy3_parse <-
 
    # Clean up relay dataframe
     suppressWarnings(relay <- relay %>%
-      dplyr::mutate(DQ = case_when(stringr::str_detect(Finals_Time, "Q") == TRUE ~ 1,
+      dplyr::mutate(DQ = case_when(stringr::str_detect(Finals, "Q") == TRUE ~ 1,
                                    TRUE ~ 0)) %>%
       dplyr::mutate(
         Seed_Time = stringr::str_remove(Seed_Time, "[A-Z]{1,}"),
-        Prelims_Time = stringr::str_remove(Prelims_Time, "[A-Z]{1,}"),
-        Finals_Time = stringr::str_remove(Finals_Time, "[A-Z]{1,}")
+        Prelims = stringr::str_remove(Prelims, "[A-Z]{1,}"),
+        Finals = stringr::str_remove(Finals, "[A-Z]{1,}")
       ) %>%
       dplyr::mutate(
         Seed_Time = mmss_format(as.numeric(Seed_Time)),
-        Prelims_Time = mmss_format(as.numeric(Prelims_Time)),
-        Finals_Time = mmss_format(as.numeric(Finals_Time))
+        Prelims = mmss_format(as.numeric(Prelims)),
+        Finals = mmss_format(as.numeric(Finals))
       ) %>%
-      dplyr::na_if("00.00") %>%
+      na_if_character("00.00") %>%
       dplyr::mutate(Place = as.numeric(Finals_Place)) %>%
       dplyr::select(-Finals_Place) %>%
       dplyr::mutate(Place = dplyr::case_when(Place == 0 ~ 100000,
                                              TRUE ~ Place)) %>%
-      dplyr::na_if(100000))
+      na_if_numeric(100000))
     } else {
       relay <- data.frame(
         Name = character(),
         Place = numeric(),
         Age = character(),
         Team = character(),
-        Prelims_Time = character(),
-        Finals_Time = character(),
+        Prelims = character(),
+        Finals = character(),
         Row_Numb = character(),
         stringsAsFactors = FALSE
       )
@@ -488,39 +487,39 @@ hy3_parse <-
 
     data <- data %>%
       dplyr::mutate(
-        Finals_Time = dplyr::case_when(
-          stringr::str_detect(Finals_Time, "[:alpha:]") ~ "Bad Entry",
-          TRUE ~ Finals_Time
+        Finals = dplyr::case_when(
+          stringr::str_detect(Finals, "[:alpha:]") ~ "Bad Entry",
+          TRUE ~ Finals
         ),
-        Prelims_Time = dplyr::case_when(
-          stringr::str_detect(Prelims_Time, "[:alpha:]") ~ "Bad Entry",
-          TRUE ~ Prelims_Time
+        Prelims = dplyr::case_when(
+          stringr::str_detect(Prelims, "[:alpha:]") ~ "Bad Entry",
+          TRUE ~ Prelims
         )
       ) %>%
-      dplyr::na_if("Bad Entry") %>%
-      dplyr::mutate(Finals_Time = dplyr::case_when((is.na(Prelims_Time) == FALSE &
-                                                      is.na(Finals_Time) == TRUE) ~ Prelims_Time,
-                                                   TRUE ~ Finals_Time
+      na_if_character("Bad Entry") %>%
+      dplyr::mutate(Finals = dplyr::case_when((is.na(Prelims) == FALSE &
+                                                      is.na(Finals) == TRUE) ~ Prelims,
+                                                   TRUE ~ Finals
       )) %>%
       dplyr::mutate(
         Birthdate = stringr::str_extract(USA_ID, "\\d{6,8}"),
         USA_ID = dplyr::case_when(stringr::str_length(USA_ID) < 8 ~ "Bad Entry",
                                   TRUE ~ USA_ID)
       ) %>%
-      dplyr::na_if("Bad Entry") %>%
+      na_if_character("Bad Entry") %>%
       dplyr::select(-Row_Min,-Row_Max,-Row_Numb,-ID_Numb)
 
     ## cleaning up data
     data <- data %>%
       dplyr::mutate(
-        Finals_Time = dplyr::case_when(
-          is.na(Finals_Time) == TRUE &
-            is.na(Prelims_Time) == FALSE ~ Prelims_Time,
-          TRUE ~ Finals_Time
+        Finals = dplyr::case_when(
+          is.na(Finals) == TRUE &
+            is.na(Prelims) == FALSE ~ Prelims,
+          TRUE ~ Finals
         )
       ) %>%
-      dplyr::na_if("00.00")
-      # filter(is.na(Finals_Time) == FALSE | is.na(Prelims_Time) == FALSE)
+      na_if_character("00.00")
+      # filter(is.na(Finals) == FALSE | is.na(Prelims) == FALSE)
 
     return(data)
 

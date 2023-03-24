@@ -36,7 +36,7 @@ lines_sort <- function(x, min_row = minimum_row, to_wide = TRUE) {
 
   #### testing ####
   # x <- data_splits
-  # min_row <- 13
+  # min_row <- 74
   # to_wide <- FALSE
 
 
@@ -60,7 +60,8 @@ lines_sort <- function(x, min_row = minimum_row, to_wide = TRUE) {
                                   Row_Numb_2 == "Same" ~ 0),
       Row_Fill = as.character(Row_Fill)
     ) %>%
-    dplyr::na_if(0) %>%
+
+    na_if_character("0") %>%
     dplyr::mutate(Row_Fill = fill_down(Row_Fill)) %>%
 
     dplyr::select(-V1, -Row_Numb, -Row_Numb_2) %>%
@@ -85,7 +86,7 @@ lines_sort <- function(x, min_row = minimum_row, to_wide = TRUE) {
       dplyr::summarise(dplyr::across(dplyr::starts_with("Split"), ~ sum(.x, na.rm = TRUE))) %>%
       dplyr::ungroup() %>%
       dplyr::mutate(dplyr::across(dplyr::starts_with("Split"), ~ mmss_format(.x))) %>%
-      dplyr::na_if("00.00") %>%
+      na_if_character("00.00") %>%
       dplyr::rename("Row_Numb" = Row_Fill) %>%
       dplyr::relocate(Row_Numb)
 

@@ -1,3 +1,5 @@
+# testthat::test_file("tests/testthat/test-format_splits.R")
+
 test_that("cumulative splits 1500", {
 
   file <-
@@ -7,10 +9,11 @@ test_that("cumulative splits 1500", {
                    splits = TRUE)
 
   df_test <- df %>%
+    filter(Event %in% c("Women 1500 LC Meter Freestyle Multi-Class S14", "Women 50 LC Meter Freestyle Multi-Class S6")) %>%
     splits_to_lap()
 
   #### 1500 has lots of splits ####
-
+#
   df_test_1500 <- df_test %>%
     filter(Event == "Women 1500 LC Meter Freestyle Multi-Class S14")
 
@@ -19,11 +22,11 @@ test_that("cumulative splits 1500", {
       list(
         Place = 1,
         Name = "Nagy, Tessa M",
-        Age = "18",
         Para = "S14",
+        Age = "18",
         Team = "Unattached-UN",
-        Prelims_Time = "26:19.38",
-        Finals_Time = "27:16.60",
+        Prelims = "26:19.38",
+        Finals = "27:16.60",
         DQ = 0,
         Exhibition = 0,
         Event = "Women 1500 LC Meter Freestyle Multi-Class S14",
@@ -79,18 +82,18 @@ test_that("cumulative splits 1500", {
           "Garcia, Julia",
           "Pfankuch, Emilynn N"
         ),
-        Age = c("14", "18", "10", "12"),
         Para = c("S6", "S6", "S6",
                  "S6"),
+        Age = c("14", "18", "10", "12"),
         Team = c(
           "Chinook Aquatic Club-PN",
           "Bend Swim Club-OR",
           "Unattached-XX",
           "Blue Dolphins-OR"
         ),
-        Prelims_Time = c("43.91",
+        Prelims = c("43.91",
                          "42.46", "1:18.35", "1:40.88"),
-        Finals_Time = c("43.66", "44.44",
+        Finals = c("43.66", "44.44",
                         "1:18.78", "1:41.87"),
         DQ = c(0, 0, 0, 0),
         Exhibition = c(0,
@@ -177,7 +180,7 @@ test_that("mixed cumulative and lap splits with threshold", {
     Name = c("Lenore Lap", "Casey Cumulative"),
     Team = rep("KVAC", 2),
     Event = rep("Womens 200 Freestyle", 2),
-    Finals_Time = rep("1:58.00", 2),
+    Finals = rep("1:58.00", 2),
     Split_50 = rep("28.00", 2),
     Split_100 = c("31.00", "59.00"),
     Split_150 = c("30.00", "1:29.00"),
@@ -197,7 +200,7 @@ test_that("mixed cumulative and lap splits with threshold", {
         Team = c("KVAC", "KVAC"),
         Event = c("Womens 200 Freestyle",
                   "Womens 200 Freestyle"),
-        Finals_Time = c("1:58.00", "1:58.00"),
+        Finals = c("1:58.00", "1:58.00"),
         Split_50 = c("28.00", "28.00"),
         Split_100 = c("31.00", "31.00"),
         Split_150 = c("30.00", "30.00"),
@@ -222,7 +225,7 @@ test_that("mixed cumulative and lap splits with threshold", {
         Team = c("KVAC", "KVAC"),
         Event = c("Womens 200 Freestyle",
                   "Womens 200 Freestyle"),
-        Finals_Time = c("1:58.00", "1:58.00"),
+        Finals = c("1:58.00", "1:58.00"),
         Split_50 = c("28.00", "28.00"),
         Split_100 = c("59.00", "59.00"),
         Split_150 = c("1:29.00", "1:29.00"),
